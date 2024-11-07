@@ -76,7 +76,7 @@ const router = new Router({
         },
         {
           path: "dish",
-          component: () => import("@/views/dish/index.vue"),
+          component: () => import("@/views/order/index.vue"),
           meta: {
             title: "菜品管理",
             icon: "icon-dish"
@@ -84,7 +84,7 @@ const router = new Router({
         },
         {
           path: "/dish/add",
-          component: () => import("@/views/dish/addDishtype.vue"),
+          component: () => import("@/views/order/addDishtype.vue"),
           meta: {
             title: "添加菜品",
             hidden: true

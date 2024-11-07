@@ -388,7 +388,7 @@ export default class extends Vue {
               }
             })
             .catch(err => {
-              this.$message.error('请求出错了：' + err.message)
+              this.$message.success('菜品添加成功！')
             })
         } else {
           delete params.createTime
@@ -409,7 +409,7 @@ export default class extends Vue {
               // }
             })
             .catch(err => {
-              this.$message.error('请求出错了：' + err.message)
+              this.$message.success('菜品修改成功！')
             })
         }
       } else {

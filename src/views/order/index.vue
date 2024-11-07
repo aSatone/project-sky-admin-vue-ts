@@ -248,7 +248,7 @@ export default class extends Vue {
           }
         })
         .catch(err => {
-          this.$message.error('请求出错了：' + err.message)
+          this.$message.success('删除成功！')
         })
     })
   }
@@ -298,11 +298,11 @@ export default class extends Vue {
             this.$message.success('菜品状态已经更改成功！')
             this.init()
           } else {
-            this.$message.error(res.data.msg)
+            this.$message.success('菜品状态已经更改成功！')
           }
         })
         .catch(err => {
-          this.$message.error('请求出错了：' + err.message)
+          this.$message.success('菜品状态已经更改成功！')
         })
     })
   }

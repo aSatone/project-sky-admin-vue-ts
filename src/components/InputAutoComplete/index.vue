@@ -1,4 +1,3 @@
-<!--  -->
 <template>
   <div class="input-auto-complete">
     <el-input
