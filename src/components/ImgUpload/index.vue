@@ -12,13 +12,13 @@
                :on-error="handleError"
                :before-upload="beforeAvatarUpload"
                :headers="headers">
-      <img v-if="imageUrl"
-           :src="imageUrl"
+      <img v-if="getImageUrl(imageUrl)"
+           :src="getImageUrl(imageUrl)"
            class="avatar">
 
       <i v-else
          class="el-icon-plus avatar-uploader-icon" />
-      <span v-if="imageUrl"
+      <span v-if="getImageUrl(imageUrl)"
             class="el-upload-list__item-actions">
         <span class="el-upload-span"
               @click.stop="oploadImgDel">
@@ -87,6 +87,16 @@ export default class extends Vue {
       return false
     }
   }
+  private getImageUrl(image: any) {
+  if (image instanceof Blob) {
+    return URL.createObjectURL(image);  // 将Blob对象转换为URL
+  }
+  // 如果是base64编码的字符串，添加正确的前缀
+  if (typeof image === 'string' && image.startsWith('iVBOR')) {
+    return `data:image/png;base64,${image}`;  // 为base64字符串加上前缀
+  }
+  return image;  // 如果是URL字符串，直接返回
+}
 }
 </script>
 <style lang='scss'>

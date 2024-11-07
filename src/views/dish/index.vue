@@ -68,7 +68,7 @@
                          label="图片">
           <template slot-scope="{ row }">
             <el-image style="width: 80px; height: 40px; border: none; cursor: pointer"
-                      :src="row.image">
+                      :src="getImageUrl(row.image)">
               <div slot="error"
                    class="image-slot">
                 <img src="./../../assets/noImg.png"
@@ -325,6 +325,17 @@ export default class extends Vue {
     this.page = val
     this.init()
   }
+  private getImageUrl(image: any) {
+  if (image instanceof Blob) {
+    return URL.createObjectURL(image);  // 将Blob对象转换为URL
+  }
+  // 如果是base64编码的字符串，添加正确的前缀
+  if (typeof image === 'string' && image.startsWith('iVBOR')) {
+    return `data:image/png;base64,${image}`;  // 为base64字符串加上前缀
+  }
+  return image;  // 如果是URL字符串，直接返回
+}
+ 
 }
 </script>
 <style lang="scss">
