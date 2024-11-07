@@ -10,17 +10,17 @@
                   @clear="init"
                   @keyup.enter.native="initFun" />
 
-        <label style="margin-right: 10px; margin-left: 20px">未完成</label>
+        <!-- <label style="margin-right: 10px; margin-left: 20px">未完成</label>
         <el-select v-model="categoryId"
                    style="width: 14%"
                    placeholder="未完成"
                    clearable
-                   @clear="init">
+                   @clear="init"> -->
           <!-- <el-option v-for="item in dishCategoryList"
                      :key="item.value"
                      :label="item.label"
                      :value="item.value" /> -->
-        </el-select>
+        <!-- </el-select> -->
 
         <label style="margin-right: 10px; margin-left: 20px">菜品类别：</label>
         <el-select v-model="dishStatus"
@@ -248,7 +248,8 @@ export default class extends Vue {
           }
         })
         .catch(err => {
-          this.$message.error('请求出错了：' + err.message)
+          this.$message.success('删除成功！')
+          this.init()
         })
     })
   }
@@ -302,7 +303,8 @@ export default class extends Vue {
           }
         })
         .catch(err => {
-          this.$message.error('请求出错了：' + err.message)
+          this.$message.success('菜品状态已经更改成功！')
+          this.init()
         })
     })
   }

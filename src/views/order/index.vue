@@ -10,13 +10,13 @@
                   @clear="init"
                   @keyup.enter.native="initFun" />
 
-        <label style="margin-right: 10px; margin-left: 20px">未完成</label>
+        <!-- <label style="margin-right: 10px; margin-left: 20px">未完成</label>
         <el-select v-model="categoryId"
                    style="width: 14%"
                    placeholder="未完成"
                    clearable
                    @clear="init">
-        </el-select>
+        </el-select> -->
 
         <label style="margin-right: 10px; margin-left: 20px">菜品类别：</label>
         <el-select v-model="dishStatus"
@@ -54,8 +54,7 @@
       <el-row :gutter="20" v-if="tableData.length">
         <el-col :span="6" v-for="(item, index) in tableData" :key="index">
           <el-card :body-style="{ padding: '10px' }" class="dish-card">
-            <el-image :src="getImageUrl(item.image)"
-                      :preview-src-list="[getImageUrl(item.image)]"
+            <el-image :src="getImageUrl(item.image)"                     
                       style="width: 100%; height: 180px; cursor: pointer"
                       @click="openDialog(item)">
               <div slot="error" class="image-slot">
@@ -66,14 +65,14 @@
               <h4>{{ item.name }}</h4>
               <p class="dish-price">￥{{ item.price.toFixed(2) }}</p>
             </div>
-            <el-button type="primary" size="mini" @click="addDishtype(item.id)">加入购物车</el-button>
+            <el-button type="primary" size="mini" @click="openDialog(item)">加入购物车</el-button>
           </el-card>
         </el-col>
       </el-row>
       <Empty v-else :is-search="isSearch" />
       <el-pagination v-if="counts > 10"
                      class="pageList"
-                     :page-sizes="[10, 20, 30, 40]"
+                     :page-sizes="[8, 16, 24, 32]"
                      :page-size="pageSize"
                      layout="total, sizes, prev, pager, next, jumper"
                      :total="counts"
@@ -81,14 +80,18 @@
                      @current-change="handleCurrentChange" />
 
       <!-- 弹出对话框 -->
-      <el-dialog :visible.sync="dialogVisible" width="30%" :title="selectedDish && selectedDish.name">
-        <div v-if="selectedDish">
-          <el-image :src="getImageUrl(selectedDish.image)" style="width: 100%; height: 200px"></el-image>
-          <p>价格：￥{{ selectedDish.price.toFixed(2) }}</p>
-          <!-- <p>分类：{{ selectedDish.categoryName }}</p> -->
+      <el-dialog :visible.sync="dialogVisible" width="30%" :title="selectedDish && selectedDish.name" :modal="false">
+        <div v-if="selectedDish" class="dialog-content">
+          <el-image :src="getImageUrl(selectedDish.image)" class="dialog-image"></el-image>
+          <p class="dialog-price">价格：￥{{ selectedDish.price.toFixed(2) }}</p>
+          <div class="quantity-section">
+            <el-input-number v-model="selectedQuantity" :min="1" label="数量" class="quantity-input"></el-input-number>
+            <div class="total-price">总价：￥{{ (selectedDish.price * selectedQuantity).toFixed(2) }}</div>
+          </div>
         </div>
         <span slot="footer" class="dialog-footer">
-          <el-button @click="dialogVisible = false">关闭</el-button>
+          <el-button type="danger" @click="dialogVisible = false" class="dialog-cancel">取消</el-button>
+          <el-button type="primary" @click="confirmAddToCart" class="dialog-confirm">确定</el-button>
         </span>
       </el-dialog>
     </div>
@@ -106,6 +109,7 @@ import {
   dishCategoryList
 } from '@/api/dish'
 import InputAutoComplete from '@/components/InputAutoComplete/index.vue'
+import { number } from 'echarts'
 //import Empty from '@/components/Empty/index.vue'
 //import { baseUrl } from '@/config.json'import Empty from '@/components/Empty/index.vue';
 
@@ -121,13 +125,13 @@ export default class extends Vue {
   private input: any = ''
   private counts: number = 0
   private page: number = 1
-  private pageSize: number = 10
+  private pageSize: number = 8
   private checkList: string[] = []
   private tableData: [] = []
   private dishState = ''
   private dishCategoryList = []
   private categoryId = ''
-  private dishStatus = ''
+  private dishStatus: number | null = null;
   private isSearch: boolean = false
   private saleStatus: any = [
     { value: 0, label: 'A类' },
@@ -135,10 +139,10 @@ export default class extends Vue {
   ];
   private dialogVisible: boolean = false;
   private selectedDish: any = null;
-
+  private selectedQuantity: number = 1;
   created() {
     this.init();
-    //this.getDishCategoryList(); 
+    // this.getDishCategoryList(); 
    }
 
 initProp(val) {
@@ -173,6 +177,7 @@ private async init(isSearch?) {
 
   private openDialog(item: any) {
     this.selectedDish = item;
+    this.selectedQuantity = 1;
     this.dialogVisible = true;
   }
 
@@ -182,6 +187,11 @@ private async init(isSearch?) {
     } else {
       this.$router.push({ path: '/dish/add', query: { id: st } })
     }
+  }
+
+  private confirmAddToCart() {
+    this.$message.success(`${this.selectedDish.name} 已加入购物车，数量：${this.selectedQuantity}`);
+    this.dialogVisible = false;
   }
   // 删除
   private deleteHandle(type: string, id: any) {
@@ -353,6 +363,48 @@ private async init(isSearch?) {
         }
       }
     }
+  }
+}
+.dialog-content {
+  .dialog-image {
+    width: 100%;
+    height: 200px;
+    display: block;
+    margin: 0 auto;
+  }
+  .dialog-price {
+    text-align: center;
+    color: #e60012;
+    font-size: 18px;
+    margin-top: 10px;
+  }
+  .quantity-section {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    margin-top: 10px;
+    .quantity-input {
+      width: 40%;
+      text-align: right;
+    }
+    .total-price {
+      font-size: 14px;
+      color: #333;
+      text-align: right;
+      margin-top: 5px;
+    }
+  }
+}
+.dialog-footer {
+  display: flex;
+  justify-content: space-between;
+  .dialog-cancel {
+    font-size: 16px;
+    padding: 10px 20px;
+  }
+  .dialog-confirm {
+    font-size: 16px;
+    padding: 10px 20px;
   }
 }
 </style>

@@ -36,6 +36,11 @@ const router = new Router({
       meta: { title: "苍穹外卖", hidden: true, notNeedAuth: true }
     },
     {
+      path: "/user",
+      component: () => import("@/views/order/index.vue"),
+      meta: { title: "苍穹外卖", hidden: true, notNeedAuth: true }
+    },
+    {
       path: "/",
       component: Layout,
       redirect: "/dashboard",
@@ -50,33 +55,33 @@ const router = new Router({
             affix: true
           }
         },
-		    {
-          path: "/statistics",
-          component: () => import("@/views/statistics/index.vue"),
-          meta: {
-            title: "数据统计",
-            icon: "icon-statistics"
-          }
-        },
-        {
-          path: "order",
-          component: () => import("@/views/orderDetails/index.vue"),
-          meta: {
-            title: "订单管理",
-            icon: "icon-order"
-          }
-        },
+		    // {
+        //   path: "/statistics",
+        //   component: () => import("@/views/statistics/index.vue"),
+        //   meta: {
+        //     title: "数据统计",
+        //     icon: "icon-statistics"
+        //   }
+        // },
+        // {
+        //   path: "order",
+        //   component: () => import("@/views/orderDetails/index.vue"),
+        //   meta: {
+        //     title: "订单管理",
+        //     icon: "icon-order"
+        //   }
+        // },
         {
           path: "setmeal",
-          component: () => import("@/views/setmeal/index.vue"),
+          component: () => import("@/views/order/index.vue"),
           meta: {
-            title: "套餐管理",
+            title: "注文",
             icon: "icon-combo"
           }
         },
         {
           path: "dish",
-          component: () => import("@/views/order/index.vue"),
+          component: () => import("@/views/dish/index.vue"),
           meta: {
             title: "菜品管理",
             icon: "icon-dish"
