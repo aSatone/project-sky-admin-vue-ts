@@ -16,10 +16,6 @@
                    placeholder="未完成"
                    clearable
                    @clear="init">
-          <!-- <el-option v-for="item in dishCategoryList"
-                     :key="item.value"
-                     :label="item.label"
-                     :value="item.value" /> -->
         </el-select>
 
         <label style="margin-right: 10px; margin-left: 20px">菜品类别：</label>
@@ -37,7 +33,6 @@
                    @click="init(true)">
           查询
         </el-button>
-
         <div class="tableLab">
           <span class="delBut non"
                 @click="deleteHandle('批量', null)">批量删除</span>
@@ -53,78 +48,29 @@
                      @click="addDishtype('add')">
             + 新建菜品
           </el-button>
-        </div>
+        </div>    
       </div>
-      <el-table v-if="tableData.length"
-                :data="tableData"
-                stripe
-                class="tableBox"
-                @selection-change="handleSelectionChange">
-        <el-table-column type="selection"
-                         width="25" />
-        <el-table-column prop="name"
-                         label="菜品名称" />
-        <el-table-column prop="image"
-                         label="图片">
-          <template slot-scope="{ row }">
-            <el-image style="width: 80px; height: 40px; border: none; cursor: pointer"
-                      :src="getImageUrl(row.image)">
-              <div slot="error"
-                   class="image-slot">
-                <img src="./../../assets/noImg.png"
-                     style="width: auto; height: 40px; border: none">
+      <!-- 使用卡片布局展示菜品 -->
+      <el-row :gutter="20" v-if="tableData.length">
+        <el-col :span="6" v-for="(item, index) in tableData" :key="index">
+          <el-card :body-style="{ padding: '10px' }" class="dish-card">
+            <el-image :src="getImageUrl(item.image)"
+                      :preview-src-list="[getImageUrl(item.image)]"
+                      style="width: 100%; height: 180px; cursor: pointer"
+                      @click="openDialog(item)">
+              <div slot="error" class="image-slot">
+                <img src="./../../assets/noImg.png" style="width: auto; height: 180px; border: none">
               </div>
             </el-image>
-          </template>
-        </el-table-column>
-        <!-- <el-table-column prop="categoryName"
-                         label="菜品分类" /> -->
-        <el-table-column label="售价">
-          <template slot-scope="scope">
-            <span style="margin-right: 10px">￥{{ (scope.row.price ).toFixed(2)*100/100 }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column label="菜品分类">
-          <template slot-scope="scope">
-            <div class="tableColumn-status"
-                 :class="{ 'stop-use': String(scope.row.status) === '0' }">
-              {{ String(scope.row.status) === '0' ? 'A类' : 'B类' }}
+            <div class="dish-info">
+              <h4>{{ item.name }}</h4>
+              <p class="dish-price">￥{{ item.price.toFixed(2) }}</p>
             </div>
-          </template>
-        </el-table-column
-        <el-table-column prop="updateTime"
-                         label="最后操作时间" />
-        <el-table-column label="操作"
-                         width="250"
-                         align="center">
-          <template slot-scope="scope">
-            <el-button type="text"
-                       size="small"
-                       class="blueBug"
-                       @click="addDishtype(scope.row.id)">
-              修改
-            </el-button>
-            <el-button type="text"
-                       size="small"
-                       class="delBut"
-                       @click="deleteHandle('单删', scope.row.id)">
-              删除
-            </el-button>
-            <el-button type="text"
-                       size="small"
-                       class="non"
-                       :class="{
-                         blueBug: scope.row.status == '0',
-                         delBut: scope.row.status != '0'
-                       }"
-                       @click="statusHandle(scope.row)">
-              {{ scope.row.status == '0' ? '改为B类' : '改为A类' }}
-            </el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-      <Empty v-else
-             :is-search="isSearch" />
+            <el-button type="primary" size="mini" @click="addDishtype(item.id)">加入购物车</el-button>
+          </el-card>
+        </el-col>
+      </el-row>
+      <Empty v-else :is-search="isSearch" />
       <el-pagination v-if="counts > 10"
                      class="pageList"
                      :page-sizes="[10, 20, 30, 40]"
@@ -133,6 +79,18 @@
                      :total="counts"
                      @size-change="handleSizeChange"
                      @current-change="handleCurrentChange" />
+
+      <!-- 弹出对话框 -->
+      <el-dialog :visible.sync="dialogVisible" width="30%" :title="selectedDish && selectedDish.name">
+        <div v-if="selectedDish">
+          <el-image :src="getImageUrl(selectedDish.image)" style="width: 100%; height: 200px"></el-image>
+          <p>价格：￥{{ selectedDish.price.toFixed(2) }}</p>
+          <!-- <p>分类：{{ selectedDish.categoryName }}</p> -->
+        </div>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="dialogVisible = false">关闭</el-button>
+        </span>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -148,15 +106,15 @@ import {
   dishCategoryList
 } from '@/api/dish'
 import InputAutoComplete from '@/components/InputAutoComplete/index.vue'
-import Empty from '@/components/Empty/index.vue'
-import { baseUrl } from '@/config.json'
+//import Empty from '@/components/Empty/index.vue'
+//import { baseUrl } from '@/config.json'import Empty from '@/components/Empty/index.vue';
 
 @Component({
   name: 'DishType',
   components: {
     HeadLable,
     InputAutoComplete,
-    Empty
+    //Empty
   }
 })
 export default class extends Vue {
@@ -172,32 +130,28 @@ export default class extends Vue {
   private dishStatus = ''
   private isSearch: boolean = false
   private saleStatus: any = [
-    {
-      value: 0,
-      label: 'A类'
-    },
-    {
-      value: 1,
-      label: 'B类'
-    }
-  ]
+    { value: 0, label: 'A类' },
+    { value: 1, label: 'B类' },
+  ];
+  private dialogVisible: boolean = false;
+  private selectedDish: any = null;
 
   created() {
-    this.init()
-    this.getDishCategoryList()
-  }
+    this.init();
+    //this.getDishCategoryList(); 
+   }
 
-  initProp(val) {
-    this.input = val
-    this.initFun()
-  }
+initProp(val) {
+  this.input = val
+  this.initFun()
+}
 
-  initFun() {
-    this.page = 1
-    this.init()
-  }
+initFun() {
+  this.page = 1
+  this.init()  
+}
 
-  private async init(isSearch?) {
+private async init(isSearch?) {
     this.isSearch = isSearch
     await getDishPage({
       page: this.page,
@@ -217,7 +171,11 @@ export default class extends Vue {
       })
   }
 
-  // 添加
+  private openDialog(item: any) {
+    this.selectedDish = item;
+    this.dialogVisible = true;
+  }
+
   private addDishtype(st: string) {
     if (st === 'add') {
       this.$router.push({ path: '/dish/add' })
@@ -225,7 +183,6 @@ export default class extends Vue {
       this.$router.push({ path: '/dish/add', query: { id: st } })
     }
   }
-
   // 删除
   private deleteHandle(type: string, id: any) {
     if (type === '批量' && id === null) {
@@ -253,23 +210,23 @@ export default class extends Vue {
     })
   }
   //获取菜品分类下拉数据
-  private getDishCategoryList() {
-    dishCategoryList({
-      type: 1
-    })
-      .then(res => {
-        if (res && res.data && res.data.code === 1) {
-          this.dishCategoryList = (
-            res.data &&
-            res.data.data &&
-            res.data.data
-          ).map(item => {
-            return { value: item.id, label: item.name }
-          })
-        }
-      })
-      .catch(() => {})
-  }
+  // private getDishCategoryList() {
+  //   dishCategoryList({
+  //     type: 1
+  //   })
+  //     .then(res => {
+  //       if (res && res.data && res.data.code === 1) {
+  //         this.dishCategoryList = (
+  //           res.data &&
+  //           res.data.data &&
+  //           res.data.data
+  //         ).map(item => {
+  //           return { value: item.id, label: item.name }
+  //         })
+  //       }
+  //     })
+  //     .catch(() => {})
+  // }
 
   //状态更改
   private statusHandle(row: any) {
@@ -317,25 +274,24 @@ export default class extends Vue {
   }
 
   private handleSizeChange(val: any) {
-    this.pageSize = val
-    this.init()
+    this.pageSize = val;
+    this.init();
   }
 
   private handleCurrentChange(val: any) {
-    this.page = val
-    this.init()
+    this.page = val;
+    this.init();
   }
+
   private getImageUrl(image: any) {
-  if (image instanceof Blob) {
-    return URL.createObjectURL(image);  // 将Blob对象转换为URL
+    if (image instanceof Blob) {
+      return URL.createObjectURL(image);
+    }
+    if (typeof image === 'string' && image.startsWith('iVBOR')) {
+      return `data:image/png;base64,${image}`;
+    }
+    return image;
   }
-  // 如果是base64编码的字符串，添加正确的前缀
-  if (typeof image === 'string' && image.startsWith('iVBOR')) {
-    return `data:image/png;base64,${image}`;  // 为base64字符串加上前缀
-  }
-  return image;  // 如果是URL字符串，直接返回
-}
- 
 }
 </script>
 <style lang="scss">
@@ -353,9 +309,8 @@ export default class extends Vue {
       z-index: 1;
       padding: 30px 28px;
       border-radius: 4px;
-      //查询黑色按钮样式
       .normal-btn {
-        background: #333333;
+        background: #333;
         color: white;
         margin-left: 20px;
       }
@@ -382,6 +337,20 @@ export default class extends Vue {
       .pageList {
         text-align: center;
         margin-top: 30px;
+      }
+      .dish-card {
+        margin-bottom: 20px;
+        .dish-info {
+          margin: 10px 0;
+          h4 {
+            font-size: 16px;
+            font-weight: bold;
+          }
+          .dish-price {
+            color: #e60012;
+            font-size: 14px;
+          }
+        }
       }
     }
   }
