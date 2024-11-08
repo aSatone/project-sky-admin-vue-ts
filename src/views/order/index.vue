@@ -51,14 +51,14 @@
         </el-col>
       </el-row>
       <Empty v-else :is-search="isSearch" />
-      <el-pagination v-if="counts > 10"
+      <!-- <el-pagination v-if="counts > 10"
                      class="pageList"
                      :page-sizes="[8, 16, 24, 32]"
                      :page-size="pageSize"
                      layout="total, sizes, prev, pager, next, jumper"
                      :total="counts"
                      @size-change="handleSizeChange"
-                     @current-change="handleCurrentChange" />
+                     @current-change="handleCurrentChange" /> -->
 
       <!-- 新增的注文确认按钮 -->
       <div class="confirm-order-button">
@@ -96,11 +96,9 @@ import {
 } from '@/api/dish'
 import InputAutoComplete from '@/components/InputAutoComplete/index.vue'
 import { number } from 'echarts'
-//import Empty from '@/components/Empty/index.vue'
-//import { baseUrl } from '@/config.json'import Empty from '@/components/Empty/index.vue';
 
 @Component({
-  name: 'DishType',
+  name: 'DishType', 
   components: {
     HeadLable,
     InputAutoComplete,
@@ -126,6 +124,7 @@ export default class extends Vue {
   private dialogVisible: boolean = false;
   private selectedDish: any = null;
   private selectedQuantity: number = 1;
+  private orderList: any[] = []; // 新增的注文列表
 
   // 在页面加载时默认选择菜类
   created() {
@@ -159,8 +158,8 @@ export default class extends Vue {
       })
       .catch(err => {
         this.$message.error('请求出错了：' + err.message)
-      })
-  }
+      })  
+    }
 
   // 选择分类按钮点击事件
   private selectCategory(category: number) {
@@ -173,7 +172,6 @@ export default class extends Vue {
     this.selectedQuantity = 1;
     this.dialogVisible = true;
   }
-
   private addDishtype(st: string) {
     if (st === 'add') {
       this.$router.push({ path: '/dish/add' })
@@ -181,16 +179,30 @@ export default class extends Vue {
       this.$router.push({ path: '/dish/add', query: { id: st } })
     }
   }
-
+  // 添加到注文列表的逻辑在点击“确定”按钮后执行
   private confirmAddToCart() {
+    const orderItem = {
+      dish: this.selectedDish,
+      quantity: this.selectedQuantity,
+    };
+    this.orderList.push(orderItem);
     this.$message.success(`${this.selectedDish.name} 已加入注文リスト，数量：${this.selectedQuantity}`);
     this.dialogVisible = false;
   }
 
-  // 新增的注文确认方法
+  // 确认订单，跳转到确认页面
   private confirmOrder() {
-    this.$message.success('您的订单已确认！');
-    // 可以在这里实现后续的订单确认逻辑
+    if (this.orderList.length === 0) {
+      this.$message.warning('请先添加一些菜品到订单中！');
+      return;
+    }
+    // 跳转到订单确认页面，并传递订单数据
+    this.$router.push({
+      path: '/order-confirmation',
+      query: {
+        orderList: JSON.stringify(this.orderList),
+      },
+    });
   }
 
   private handleSizeChange(val: any) {
@@ -242,7 +254,7 @@ export default class extends Vue {
         justify-content: flex-start;
 
         .category-button {
-          width: 30%;
+          width: 15%;
           margin-right: 10px;
         }
       }

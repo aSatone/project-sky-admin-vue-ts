@@ -45,6 +45,12 @@ const router = new Router({
       component: () => import("@/views/order/index.vue"),
       meta: { title: "苍穹外卖", hidden: true, notNeedAuth: true }
     },
+    {
+      path: "/orde1r",
+      component: () => import("@/views/orderConfirmation/index.vue"),
+      meta: { title: "苍穹外卖", hidden: true, notNeedAuth: true }
+    },
+    
     
     {
       path: "/",
