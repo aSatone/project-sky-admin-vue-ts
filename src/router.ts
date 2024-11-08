@@ -37,9 +37,15 @@ const router = new Router({
     },
     {
       path: "/user",
+      component: () => import("@/views/user/index.vue"),
+      meta: { title: "苍穹外卖", hidden: true, notNeedAuth: true }
+    },
+    {
+      path: "/order",
       component: () => import("@/views/order/index.vue"),
       meta: { title: "苍穹外卖", hidden: true, notNeedAuth: true }
     },
+    
     {
       path: "/",
       component: Layout,

@@ -101,7 +101,7 @@ export default class extends Vue {
           .then((res: any) => {
             if (String(res.code) === '1') {
               //登录成功，跳转到系统首页
-              this.$router.push('/')
+              this.$router.push('/order')
             } else {
               // this.$message.error(res.msg)
               this.loading = false

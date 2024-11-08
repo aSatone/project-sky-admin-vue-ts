@@ -10,51 +10,31 @@
                   @clear="init"
                   @keyup.enter.native="initFun" />
 
-        <!-- <label style="margin-right: 10px; margin-left: 20px">未完成</label>
-        <el-select v-model="categoryId"
-                   style="width: 14%"
-                   placeholder="未完成"
-                   clearable
-                   @clear="init">
-        </el-select> -->
-
-        <label style="margin-right: 10px; margin-left: 20px">菜品类别：</label>
-        <el-select v-model="dishStatus"
-                   style="width: 14%"
-                   placeholder="请选择"
-                   clearable
-                   @clear="init">
-          <el-option v-for="item in saleStatus"
-                     :key="item.value"
-                     :label="item.label"
-                     :value="item.value" />
-        </el-select>
         <el-button class="normal-btn continue"
                    @click="init(true)">
           查询
         </el-button>
-        <div class="tableLab">
-          <span class="delBut non"
-                @click="deleteHandle('批量', null)">批量删除</span>
-          <!-- <span class="blueBug non" @click="statusHandle('1')">批量启售</span>
-          <span
-            style="border: none"
-            class="delBut non"
-            @click="statusHandle('0')"
-            >批量停售</span
-          > -->
-          <el-button type="primary"
-                     style="margin-left: 15px"
-                     @click="addDishtype('add')">
-            + 新建菜品
-          </el-button>
-        </div>    
       </div>
+
+      <!-- 新增的菜类和其他选择按钮 -->
+      <div class="category-buttons">
+        <el-button :type="dishStatus === 0 ? 'primary' : 'default'"
+                   @click="selectCategory(0)"
+                   class="category-button">
+          菜类
+        </el-button>
+        <el-button :type="dishStatus === 1 ? 'primary' : 'default'"
+                   @click="selectCategory(1)"
+                   class="category-button">
+          其他
+        </el-button>
+      </div>
+
       <!-- 使用卡片布局展示菜品 -->
       <el-row :gutter="20" v-if="tableData.length">
         <el-col :span="6" v-for="(item, index) in tableData" :key="index">
           <el-card :body-style="{ padding: '10px' }" class="dish-card">
-            <el-image :src="getImageUrl(item.image)"                     
+            <el-image :src="getImageUrl(item.image)"
                       style="width: 100%; height: 180px; cursor: pointer"
                       @click="openDialog(item)">
               <div slot="error" class="image-slot">
@@ -65,7 +45,8 @@
               <h4>{{ item.name }}</h4>
               <p class="dish-price">￥{{ item.price.toFixed(2) }}</p>
             </div>
-            <el-button type="primary" size="mini" @click="openDialog(item)">加入购物车</el-button>
+            <!-- 修改按钮文本为“注文リスト追加” -->
+            <el-button type="primary" size="mini" @click="openDialog(item)">注文リスト追加</el-button>
           </el-card>
         </el-col>
       </el-row>
@@ -78,6 +59,11 @@
                      :total="counts"
                      @size-change="handleSizeChange"
                      @current-change="handleCurrentChange" />
+
+      <!-- 新增的注文确认按钮 -->
+      <div class="confirm-order-button">
+        <el-button type="success" @click="confirmOrder">注文确认</el-button>
+      </div>
 
       <!-- 弹出对话框 -->
       <el-dialog :visible.sync="dialogVisible" width="30%" :title="selectedDish && selectedDish.name" :modal="false">
@@ -131,31 +117,32 @@ export default class extends Vue {
   private dishState = ''
   private dishCategoryList = []
   private categoryId = ''
-  private dishStatus: number | null = null;
+  private dishStatus: number | null = 0; // 默认选择“菜类”
   private isSearch: boolean = false
   private saleStatus: any = [
-    { value: 0, label: 'A类' },
-    { value: 1, label: 'B类' },
+    { value: 0, label: '菜类' },
+    { value: 1, label: '其他' },
   ];
   private dialogVisible: boolean = false;
   private selectedDish: any = null;
   private selectedQuantity: number = 1;
+
+  // 在页面加载时默认选择菜类
   created() {
     this.init();
-    // this.getDishCategoryList(); 
-   }
+  }
 
-initProp(val) {
-  this.input = val
-  this.initFun()
-}
+  initProp(val) {
+    this.input = val
+    this.initFun()
+  }
 
-initFun() {
-  this.page = 1
-  this.init()  
-}
+  initFun() {
+    this.page = 1
+    this.init()
+  }
 
-private async init(isSearch?) {
+  private async init(isSearch?) {
     this.isSearch = isSearch
     await getDishPage({
       page: this.page,
@@ -175,6 +162,12 @@ private async init(isSearch?) {
       })
   }
 
+  // 选择分类按钮点击事件
+  private selectCategory(category: number) {
+    this.dishStatus = category;
+    this.init();
+  }
+
   private openDialog(item: any) {
     this.selectedDish = item;
     this.selectedQuantity = 1;
@@ -190,97 +183,14 @@ private async init(isSearch?) {
   }
 
   private confirmAddToCart() {
-    this.$message.success(`${this.selectedDish.name} 已加入购物车，数量：${this.selectedQuantity}`);
+    this.$message.success(`${this.selectedDish.name} 已加入注文リスト，数量：${this.selectedQuantity}`);
     this.dialogVisible = false;
   }
-  // 删除
-  private deleteHandle(type: string, id: any) {
-    if (type === '批量' && id === null) {
-      if (this.checkList.length === 0) {
-        return this.$message.error('请选择删除对象')
-      }
-    }
-    this.$confirm('确认删除该菜品, 是否继续?', '确定删除', {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(() => {
-      deleteDish(type === '批量' ? this.checkList.join(',') : id)
-        .then(res => {
-          if (res && res.data && res.data.code === 1) {
-            this.$message.success('删除成功！')
-            this.init()
-          } else {
-            this.$message.error(res.data.msg)
-          }
-        })
-        .catch(err => {
-          this.$message.success('删除成功！')
-        })
-    })
-  }
-  //获取菜品分类下拉数据
-  // private getDishCategoryList() {
-  //   dishCategoryList({
-  //     type: 1
-  //   })
-  //     .then(res => {
-  //       if (res && res.data && res.data.code === 1) {
-  //         this.dishCategoryList = (
-  //           res.data &&
-  //           res.data.data &&
-  //           res.data.data
-  //         ).map(item => {
-  //           return { value: item.id, label: item.name }
-  //         })
-  //       }
-  //     })
-  //     .catch(() => {})
-  // }
 
-  //状态更改
-  private statusHandle(row: any) {
-    let params: any = {}
-    if (typeof row === 'string') {
-      if (this.checkList.length === 0) {
-        this.$message.error('批量操作，请先勾选操作菜品！')
-        return false
-      }
-      params.id = this.checkList.join(',')
-      params.status = row
-    } else {
-      params.id = row.id
-      params.status = row.status ? '0' : '1'
-    }
-    this.dishState = params
-    this.$confirm('确认更改该菜品状态?', '提示', {
-      confirmButtonText: '确定',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }).then(() => {
-      // 起售停售---批量起售停售接口
-      dishStatusByStatus(this.dishState)
-        .then(res => {
-          if (res && res.data && res.data.code === 1) {
-            this.$message.success('菜品状态已经更改成功！')
-            this.init()
-          } else {
-            this.$message.success('菜品状态已经更改成功！')
-          }
-        })
-        .catch(err => {
-          this.$message.success('菜品状态已经更改成功！')
-        })
-    })
-  }
-
-  // 全部操作
-  private handleSelectionChange(val: any) {
-    let checkArr: any[] = []
-    val.forEach((n: any) => {
-      checkArr.push(n.id)
-    })
-    this.checkList = checkArr
+  // 新增的注文确认方法
+  private confirmOrder() {
+    this.$message.success('您的订单已确认！');
+    // 可以在这里实现后续的订单确认逻辑
   }
 
   private handleSizeChange(val: any) {
@@ -304,11 +214,7 @@ private async init(isSearch?) {
   }
 }
 </script>
-<style lang="scss">
-.el-table-column--selection .cell {
-  padding-left: 10px;
-}
-</style>
+
 <style lang="scss" scoped>
 .dashboard {
   &-container {
@@ -319,35 +225,28 @@ private async init(isSearch?) {
       z-index: 1;
       padding: 30px 28px;
       border-radius: 4px;
+
       .normal-btn {
         background: #333;
         color: white;
         margin-left: 20px;
       }
+
       .tableBar {
         margin-bottom: 20px;
+      }
 
-        .tableLab {
-          display: inline-block;
-          float: right;
-          span {
-            cursor: pointer;
-            display: inline-block;
-            font-size: 14px;
-            padding: 0 20px;
-            color: $gray-2;
-          }
+      .category-buttons {
+        margin-bottom: 20px;
+        display: flex;
+        justify-content: flex-start;
+
+        .category-button {
+          width: 30%;
+          margin-right: 10px;
         }
       }
-      .tableBox {
-        width: 100%;
-        border: 1px solid $gray-5;
-        border-bottom: 0;
-      }
-      .pageList {
-        text-align: center;
-        margin-top: 30px;
-      }
+
       .dish-card {
         margin-bottom: 20px;
         .dish-info {
@@ -362,49 +261,17 @@ private async init(isSearch?) {
           }
         }
       }
+
+      .confirm-order-button {
+        text-align: right;
+        margin-top: 20px;
+
+        .el-button {
+          width: 20%;
+          height: 40px;
+        }
+      }
     }
-  }
-}
-.dialog-content {
-  .dialog-image {
-    width: 100%;
-    height: 200px;
-    display: block;
-    margin: 0 auto;
-  }
-  .dialog-price {
-    text-align: center;
-    color: #e60012;
-    font-size: 18px;
-    margin-top: 10px;
-  }
-  .quantity-section {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    margin-top: 10px;
-    .quantity-input {
-      width: 40%;
-      text-align: right;
-    }
-    .total-price {
-      font-size: 14px;
-      color: #333;
-      text-align: right;
-      margin-top: 5px;
-    }
-  }
-}
-.dialog-footer {
-  display: flex;
-  justify-content: space-between;
-  .dialog-cancel {
-    font-size: 16px;
-    padding: 10px 20px;
-  }
-  .dialog-confirm {
-    font-size: 16px;
-    padding: 10px 20px;
   }
 }
 </style>
