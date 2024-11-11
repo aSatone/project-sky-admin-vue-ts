@@ -45,8 +45,13 @@ module.exports = {
     'standard/object-curly-even-spacing': 0,
   },
   parserOptions: {
-    parser: '@typescript-eslint/parser'
+    parser: '@typescript-eslint/parser',
+    sourceType: 'module'
   },
+  plugins: [
+    'vue',
+    '@typescript-eslint'
+  ],
   overrides: [
     {
       files: [

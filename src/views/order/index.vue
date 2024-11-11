@@ -1,7 +1,8 @@
+/* eslint-disable */
 <template>
   <div class="dashboard-container">
     <div class="container">
-      <div class="tableBar">
+      <!-- <div class="tableBar">
         <label style="margin-right: 10px">菜品名称：</label>
         <el-input v-model="input"
                   placeholder="请填写菜品名称"
@@ -9,24 +10,27 @@
                   clearable
                   @clear="init"
                   @keyup.enter.native="initFun" />
-
         <el-button class="normal-btn continue"
                    @click="init(true)">
           查询
         </el-button>
-      </div>
-
+      </div> -->
       <!-- 新增的菜类和其他选择按钮 -->
       <div class="category-buttons">
         <el-button :type="dishStatus === 0 ? 'primary' : 'default'"
                    @click="selectCategory(0)"
                    class="category-button">
-          菜类
+          日式料理
         </el-button>
         <el-button :type="dishStatus === 1 ? 'primary' : 'default'"
                    @click="selectCategory(1)"
                    class="category-button">
-          其他
+          中华料理
+        </el-button>
+        <el-button :type="dishStatus === 2 ? 'primary' : 'default'"
+                   @click="selectCategory(2)"
+                   class="category-button">
+          西式料理
         </el-button>
       </div>
 
@@ -50,7 +54,7 @@
           </el-card>
         </el-col>
       </el-row>
-      <Empty v-else :is-search="isSearch" />
+      <!-- <Empty v-else :is-search="isSearch" /> -->
       <!-- <el-pagination v-if="counts > 10"
                      class="pageList"
                      :page-sizes="[8, 16, 24, 32]"
@@ -96,6 +100,8 @@ import {
 } from '@/api/dish'
 import InputAutoComplete from '@/components/InputAutoComplete/index.vue'
 import { number } from 'echarts'
+import { config } from '@vue/test-utils'
+import { mapActions,mapGetters } from 'vuex'
 
 @Component({
   name: 'DishType', 
@@ -124,9 +130,18 @@ export default class extends Vue {
   private dialogVisible: boolean = false;
   private selectedDish: any = null;
   private selectedQuantity: number = 1;
-  private orderList: any[] = []; // 新增的注文列表
 
   // 在页面加载时默认选择菜类
+  computed = {
+    ...mapGetters('order', ['getOrderList']),
+  }
+  get orderList() {
+    return this.$store.getters['order/getOrderList'] || [];
+  }
+  addOrderItem(orderItem) {
+    this.$store.dispatch('order/addOrderItem', orderItem);
+  }
+
   created() {
     this.init();
   }
@@ -172,23 +187,32 @@ export default class extends Vue {
     this.selectedQuantity = 1;
     this.dialogVisible = true;
   }
-  private addDishtype(st: string) {
-    if (st === 'add') {
-      this.$router.push({ path: '/dish/add' })
-    } else {
-      this.$router.push({ path: '/dish/add', query: { id: st } })
-    }
-  }
   // 添加到注文列表的逻辑在点击“确定”按钮后执行
   private confirmAddToCart() {
+  // 获取当前的订单列表
+  const orderList = this.orderList; // 确保是一个数组
+
+  // 检查 orderList 中是否已有相同 dish.id 的项
+  const existingItem = orderList.find(item => item.dish.id === this.selectedDish.id);
+
+  if (existingItem) {
+    // 如果已存在该 dish，增加数量
+    const updatedItem = { ...existingItem, quantity: existingItem.quantity + this.selectedQuantity };
+    this.addOrderItem(updatedItem);
+    this.$message.success(`${this.selectedDish.name} 已加入注文リスト，总数量：${updatedItem.quantity}`);
+  } else {
+    // 如果不存在，添加新的 orderItem
     const orderItem = {
       dish: this.selectedDish,
       quantity: this.selectedQuantity,
     };
-    this.orderList.push(orderItem);
+    this.addOrderItem(orderItem); // 调用 Vuex action 将订单项添加到 orderList 中
     this.$message.success(`${this.selectedDish.name} 已加入注文リスト，数量：${this.selectedQuantity}`);
-    this.dialogVisible = false;
   }
+
+  this.dialogVisible = false;
+}
+
 
   // 确认订单，跳转到确认页面
   private confirmOrder() {
@@ -199,20 +223,10 @@ export default class extends Vue {
     // 跳转到订单确认页面，并传递订单数据
     this.$router.push({
       path: '/order-confirmation',
-      query: {
-        orderList: JSON.stringify(this.orderList),
-      },
+      // query: {
+      //   orderList: JSON.stringify(this.orderList),
+      // },
     });
-  }
-
-  private handleSizeChange(val: any) {
-    this.pageSize = val;
-    this.init();
-  }
-
-  private handleCurrentChange(val: any) {
-    this.page = val;
-    this.init();
   }
 
   private getImageUrl(image: any) {

@@ -38,17 +38,17 @@ const router = new Router({
     {
       path: "/user",
       component: () => import("@/views/user/index.vue"),
-      meta: { title: "苍穹外卖", hidden: true, notNeedAuth: true }
+      meta: { title: "欢迎光临", hidden: true, notNeedAuth: false }
     },
     {
       path: "/order",
       component: () => import("@/views/order/index.vue"),
-      meta: { title: "苍穹外卖", hidden: true, notNeedAuth: true }
+      meta: { title: "注文", hidden: true, notNeedAuth: false }
     },
     {
-      path: "/orde1r",
+      path: "/order-confirmation",
       component: () => import("@/views/orderConfirmation/index.vue"),
-      meta: { title: "苍穹外卖", hidden: true, notNeedAuth: true }
+      meta: { title: "注文確認", hidden: true, notNeedAuth: false }
     },
     
     
@@ -101,7 +101,7 @@ const router = new Router({
         },
         {
           path: "/dish/add",
-          component: () => import("@/views/order/addDishtype.vue"),
+          component: () => import("@/views/dish/addDishtype.vue"),
           meta: {
             title: "添加菜品",
             hidden: true

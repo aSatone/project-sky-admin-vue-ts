@@ -1,36 +1,57 @@
-// store/modules/order.ts
+// src/store/modules/order.ts
+import { Module } from 'vuex';
 
-import { Module, VuexModule, Mutation, Action } from 'vuex-module-decorators';
-
-@Module({ namespaced: true })
-class Order extends VuexModule {
-  public cart: Array<{ tableNumber: number; dish: any; quantity: number }> = [];
-
-  // 添加菜品到订单
-  @Mutation
-  public ADD_TO_CART(payload: { tableNumber: number; dish: any; quantity: number }): void {
-    const existingItem = this.cart.find(item => item.dish.id === payload.dish.id && item.tableNumber === payload.tableNumber);
-    if (existingItem) {
-      existingItem.quantity += payload.quantity;
-    } else {
-      this.cart.push(payload);
-    }
-  }
-
-  // 更新菜品数量
-  @Mutation
-  public UPDATE_QUANTITY(payload: { dishId: number; tableNumber: number; quantity: number }): void {
-    const item = this.cart.find(cartItem => cartItem.dish.id === payload.dishId && cartItem.tableNumber === payload.tableNumber);
-    if (item) {
-      item.quantity = payload.quantity;
-    }
-  }
-
-  // 清空购物车
-  @Mutation
-  public CLEAR_CART(): void {
-    this.cart = [];
-  }
+export interface OrderItem {
+  dish: {
+    id: number;
+    name: string;
+    price: number;
+    image: string; // 添加价格字段
+    // 添加其他字段，例如描述等
+  };
+  quantity: number;
 }
 
-export default Order;
+export interface OrderState {
+  orderList: OrderItem[];
+}
+
+const orderModule: Module<OrderState, any> = {
+  namespaced: true,  // 确保设置为 true
+  state: {
+    orderList: []
+  },
+  mutations: {
+    ADD_ORDER_ITEM(state, orderItem: OrderItem) {
+      const existingItem = state.orderList.find(item => item.dish.id === orderItem.dish.id);
+      if (existingItem) {
+        // 修改为只增加数量，而不是相加数量，以避免重复更新时的问题
+        existingItem.quantity = orderItem.quantity;
+      } else {
+        state.orderList.push({ ...orderItem });
+      }
+    },
+    REMOVE_ORDER_ITEM(state, orderItem: OrderItem) {
+      state.orderList = state.orderList.filter(item => item.dish.id !== orderItem.dish.id);
+    },
+    SET_ORDER_LIST(state, orderList: OrderItem[]) {
+      state.orderList = [...orderList];
+    }
+  },
+  actions: {
+    addOrderItem({ commit }, orderItem: OrderItem) {
+      commit('ADD_ORDER_ITEM', orderItem);
+    },
+    removeOrderItem({ commit }, orderItem: OrderItem) {
+      commit('REMOVE_ORDER_ITEM', orderItem);
+    },
+    setOrderList({ commit }, orderList: OrderItem[]) {
+      commit('SET_ORDER_LIST', orderList);
+    }
+  },
+  getters: {
+    getOrderList: (state) => state.orderList
+  }
+};
+
+export default orderModule;
