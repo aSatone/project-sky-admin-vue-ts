@@ -1,27 +1,36 @@
 <template>
   <div class="order-confirmation-container">
-    <h2>订单确认</h2>
+    <h2>注文確認</h2>
+
+    <!-- 注文のテーブル -->
     <el-table :data="orderList" style="width: 100%">
-      <el-table-column prop="dish.image" label="图片" width="180">
-          <template slot-scope="scope">
-            <el-image style="width: 40px; height: 40px; border: none; cursor: pointer"
-                      :src="getImageUrl(scope.row.dish.image)">
-              <div slot="error"
-                   class="image-slot">
-                <img src="./../../assets/noImg.png"
-                     style="width: auto; height: 40px; border: none">
-              </div>
-            </el-image>
-          </template>
-        </el-table-column>
-      <el-table-column prop="dish.name" label="菜品名称" width="180"></el-table-column>
-      <el-table-column prop="dish.price" label="单价" width="100">
+      <!-- 画像列 -->
+      <el-table-column prop="dish.image" label="画像" width="180">
+        <template slot-scope="scope">
+          <!-- 料理の画像を表示、クリックしても何も起こらない -->
+          <el-image style="width: 40px; height: 40px; border: none; cursor: pointer"
+                    :src="getImageUrl(scope.row.dish.image)">
+            <div slot="error" class="image-slot">
+              <img src="./../../assets/noImg.png" style="width: auto; height: 40px; border: none">
+            </div>
+          </el-image>
+        </template>
+      </el-table-column>
+      
+      <!-- 料理名列 -->
+      <el-table-column prop="dish.name" label="料理名" width="180"></el-table-column>
+
+      <!-- 単価列 -->
+      <el-table-column prop="dish.price" label="単価" width="100">
         <template slot-scope="scope">
           ￥{{ scope.row.dish.price.toFixed(2) }}
         </template>
       </el-table-column>
+
+      <!-- 数量列 -->
       <el-table-column label="数量" width="150">
         <template slot-scope="scope">
+          <!-- 数量を変更する入力ボックス -->
           <el-input-number 
             v-model="scope.row.quantity" 
             :min="1" 
@@ -30,25 +39,33 @@
           />
         </template>
       </el-table-column>
-      <el-table-column label="小计" width="120">
+
+      <!-- 小計列 -->
+      <el-table-column label="小計" width="120">
         <template slot-scope="scope">
           ￥{{ (scope.row.dish.price * scope.row.quantity).toFixed(2) }}
         </template>
       </el-table-column>
+
+      <!-- 操作列（削除ボタン）-->
       <el-table-column label="操作" width="100">
         <template slot-scope="scope">
-          <el-button type="danger" size="mini" @click="removeItem(scope.row)">删除</el-button>
+          <!-- 削除ボタン -->
+          <el-button type="danger" size="mini" @click="removeItem(scope.row)">削除</el-button>
         </template>
       </el-table-column>
     </el-table>
+
+    <!-- 注文金額の概要 -->
     <div class="order-summary">
-      <p>总金额：￥{{ totalAmount.toFixed(2) }}</p>
-      <el-button type="success" @click="confirmOrder">确认订单</el-button>
+      <p>合計金額：￥{{ totalAmount.toFixed(2) }}</p>
+      <!-- 注文確定ボタン -->
+      <el-button type="success" @click="confirmOrder">注文確定</el-button>
     </div>
 
-    <!-- 添加返回按钮 -->
+    <!-- 戻るボタン -->
     <div class="footer-buttons">
-      <el-button type="primary" @click="goBack">返回点单页面</el-button>
+      <el-button type="primary" @click="goBack">注文ページに戻る</el-button>
     </div>
   </div>
 </template>
@@ -60,73 +77,73 @@ import { Component, Vue } from 'vue-property-decorator';
   name: 'OrderConfirmation'
 })
 export default class OrderConfirmation extends Vue {
-  // 映射 Vuex getters 获取订单列表
+  // Vuexのgetterを使って注文リストを取得
   get orderList() {
     return this.$store.getters['order/getOrderList'] || [];
   }
 
-  // 映射 Vuex actions，用于更新订单列表
+  // Vuexのactionを使用して注文リストを更新
   updateOrderItem(orderItem) {
-    this.$store.dispatch('order/addOrderItem', orderItem);
+    this.$store.dispatch('order/addOrderItem', orderItem);  // 注文項目の更新
   }
 
   removeOrderItem(orderItem) {
-    this.$store.dispatch('order/removeOrderItem', orderItem);
+    this.$store.dispatch('order/removeOrderItem', orderItem);  // 注文項目の削除
   }
 
-  // 计算总金额
+  // 合計金額を計算
   get totalAmount() {
     return this.orderList.reduce((sum, item) => sum + item.dish.price * item.quantity, 0);
   }
 
-  // 更新数量
+  // 数量の更新
   updateQuantity(orderItem) {
-  // 创建对象的浅拷贝以避免直接修改原始对象
-  const updatedOrderItem = {
-    ...orderItem,
-    quantity: orderItem.quantity, // 使用更新后的数量
-  };
+    // オブジェクトの浅いコピーを作成して元のオブジェクトを直接変更しないようにする
+    const updatedOrderItem = {
+      ...orderItem,
+      quantity: orderItem.quantity, // 更新された数量を使用
+    };
 
-  // 更新 Vuex store 中的数量
-  if (updatedOrderItem.quantity <= 0) {
-    this.removeItem(updatedOrderItem);
-  } else {
-    this.updateOrderItem(updatedOrderItem);
+    // Vuexストア内の数量を更新
+    if (updatedOrderItem.quantity <= 0) {
+      this.removeItem(updatedOrderItem);  // 数量が0以下ならその項目を削除
+    } else {
+      this.updateOrderItem(updatedOrderItem);  // 数量を更新
+    }
   }
-}
 
-  // 删除某一项
+  // 注文項目の削除
   removeItem(orderItem) {
-    this.removeOrderItem(orderItem);
+    this.removeOrderItem(orderItem);  // 指定した注文項目を削除
   }
 
-  // 确认订单
+  // 注文を確定
   confirmOrder() {
     if (this.orderList.length === 0) {
-      this.$message.warning('订单中没有任何菜品，请先添加菜品！');
+      this.$message.warning('注文に料理が追加されていません。先に料理を追加してください！');  // 注文リストが空の場合、警告メッセージを表示
       return;
     }
-    this.$message.success('订单已确认！');
-    this.$router.push({ path: '/order' });
-    // 你可以在这里添加跳转到支付页面或者其他操作
+    this.$message.success('注文が確定しました！');  // 注文が確定したことを知らせるメッセージ
+    this.$router.push({ path: '/order' });  // 注文ページ（例：支払いページ）へ遷移
   }
 
-  // 返回到点单页面
+  // 注文ページに戻る
   goBack() {
-    this.$router.push({ path: '/order' }); // 修改路径为点单页面的路径
+    this.$router.push({ path: '/order' }); // 注文ページへの遷移
   }
-  private getImageUrl(image: any) {
-  if (image instanceof Blob) {
-    return URL.createObjectURL(image);  // 将Blob对象转换为URL
-  }
-  // 如果是base64编码的字符串，添加正确的前缀
-  if (typeof image === 'string' && image.startsWith('iVBOR')) {
-    return `data:image/png;base64,${image}`;  // 为base64字符串加上前缀
-  }
-  return image;  // 如果是URL字符串，直接返回
-}
-}
 
+  // 画像URLを取得
+  private getImageUrl(image: any) {
+    if (image instanceof Blob) {
+      return URL.createObjectURL(image);  // BlobオブジェクトをURLに変換
+    }
+    // base64エンコードされた文字列の場合、適切なプレフィックスを付ける
+    if (typeof image === 'string' && image.startsWith('iVBOR')) {
+      return `data:image/png;base64,${image}`;  // base64文字列にプレフィックスを追加
+    }
+    return image;  // URL文字列の場合はそのまま返す
+  }
+}
 </script>
 
 <style scoped>

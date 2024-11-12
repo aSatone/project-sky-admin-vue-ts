@@ -1,43 +1,34 @@
-/* eslint-disable */
 <template>
   <div class="dashboard-container">
     <div class="container">
-      <!-- <div class="tableBar">
-        <label style="margin-right: 10px">菜品名称：</label>
-        <el-input v-model="input"
-                  placeholder="请填写菜品名称"
-                  style="width: 14%"
-                  clearable
-                  @clear="init"
-                  @keyup.enter.native="initFun" />
-        <el-button class="normal-btn continue"
-                   @click="init(true)">
-          查询
-        </el-button>
-      </div> -->
-      <!-- 新增的菜类和其他选择按钮 -->
+
+      <!-- カテゴリ選択ボタン -->
       <div class="category-buttons">
+        <!-- 日本料理ボタン -->
         <el-button :type="dishStatus === 0 ? 'primary' : 'default'"
                    @click="selectCategory(0)"
                    class="category-button">
-          日式料理
+                   日本料理
         </el-button>
+        <!-- 中華料理ボタン -->
         <el-button :type="dishStatus === 1 ? 'primary' : 'default'"
                    @click="selectCategory(1)"
                    class="category-button">
-          中华料理
+                   中華料理
         </el-button>
+        <!-- 西洋料理ボタン -->
         <el-button :type="dishStatus === 2 ? 'primary' : 'default'"
                    @click="selectCategory(2)"
                    class="category-button">
-          西式料理
+          西洋料理
         </el-button>
       </div>
 
-      <!-- 使用卡片布局展示菜品 -->
+      <!-- カードレイアウトで料理を表示 -->
       <el-row :gutter="20" v-if="tableData.length">
         <el-col :span="6" v-for="(item, index) in tableData" :key="index">
           <el-card :body-style="{ padding: '10px' }" class="dish-card">
+            <!-- 料理画像を表示、クリックするとダイアログを開く -->
             <el-image :src="getImageUrl(item.image)"
                       style="width: 100%; height: 180px; cursor: pointer"
                       @click="openDialog(item)">
@@ -45,43 +36,40 @@
                 <img src="./../../assets/noImg.png" style="width: auto; height: 180px; border: none">
               </div>
             </el-image>
+            <!-- 料理名と価格を表示 -->
             <div class="dish-info">
               <h4>{{ item.name }}</h4>
               <p class="dish-price">￥{{ item.price.toFixed(2) }}</p>
             </div>
-            <!-- 修改按钮文本为“注文リスト追加” -->
-            <el-button type="primary" size="mini" @click="openDialog(item)">注文リスト追加</el-button>
+            <!-- 料理を注文リストに追加するボタン -->
+            <el-button type="primary" size="mini" @click="openDialog(item)">注文リストに追加</el-button>
           </el-card>
         </el-col>
       </el-row>
-      <!-- <Empty v-else :is-search="isSearch" /> -->
-      <!-- <el-pagination v-if="counts > 10"
-                     class="pageList"
-                     :page-sizes="[8, 16, 24, 32]"
-                     :page-size="pageSize"
-                     layout="total, sizes, prev, pager, next, jumper"
-                     :total="counts"
-                     @size-change="handleSizeChange"
-                     @current-change="handleCurrentChange" /> -->
-
-      <!-- 新增的注文确认按钮 -->
+      
+      <!-- 注文確認ボタン -->
       <div class="confirm-order-button">
-        <el-button type="success" @click="confirmOrder">注文确认</el-button>
+        <el-button type="success" @click="confirmOrder">注文確認</el-button>
       </div>
 
-      <!-- 弹出对话框 -->
+      <!-- ダイアログのスタイル -->
       <el-dialog :visible.sync="dialogVisible" width="30%" :title="selectedDish && selectedDish.name" :modal="false">
         <div v-if="selectedDish" class="dialog-content">
+          <!-- 料理の画像を表示 -->
           <el-image :src="getImageUrl(selectedDish.image)" class="dialog-image"></el-image>
-          <p class="dialog-price">价格：￥{{ selectedDish.price.toFixed(2) }}</p>
+          <!-- 料理の価格を表示 -->
+          <p class="dialog-price">価格：￥{{ selectedDish.price.toFixed(2) }}</p>
           <div class="quantity-section">
+            <!-- 数量を選択 -->
             <el-input-number v-model="selectedQuantity" :min="1" label="数量" class="quantity-input"></el-input-number>
-            <div class="total-price">总价：￥{{ (selectedDish.price * selectedQuantity).toFixed(2) }}</div>
+            <div class="total-price">総額：￥{{ (selectedDish.price * selectedQuantity).toFixed(2) }}</div>
           </div>
         </div>
         <span slot="footer" class="dialog-footer">
-          <el-button type="danger" @click="dialogVisible = false" class="dialog-cancel">取消</el-button>
-          <el-button type="primary" @click="confirmAddToCart" class="dialog-confirm">确定</el-button>
+          <!-- キャンセルボタン -->
+          <el-button type="danger" @click="dialogVisible = false" class="dialog-cancel">キャンセル</el-button>
+          <!-- 確定ボタン -->
+          <el-button type="primary" @click="confirmAddToCart" class="dialog-confirm">確定</el-button>
         </span>
       </el-dialog>
     </div>
@@ -101,142 +89,144 @@ import {
 import InputAutoComplete from '@/components/InputAutoComplete/index.vue'
 import { number } from 'echarts'
 import { config } from '@vue/test-utils'
-import { mapActions,mapGetters } from 'vuex'
+import { mapActions, mapGetters } from 'vuex'
 
 @Component({
-  name: 'DishType', 
+  name: 'DishType',
   components: {
     HeadLable,
     InputAutoComplete,
-    //Empty
   }
 })
 export default class extends Vue {
-  private input: any = ''
-  private counts: number = 0
-  private page: number = 1
-  private pageSize: number = 8
-  private checkList: string[] = []
-  private tableData: [] = []
-  private dishState = ''
-  private dishCategoryList = []
-  private categoryId = ''
-  private dishStatus: number | null = 0; // 默认选择“菜类”
-  private isSearch: boolean = false
-  private saleStatus: any = [
-    { value: 0, label: '菜类' },
-    { value: 1, label: '其他' },
-  ];
-  private dialogVisible: boolean = false;
-  private selectedDish: any = null;
-  private selectedQuantity: number = 1;
+  private input: any = ''  // 入力された検索値（初期値は空）
+  
+  private page: number = 1  // 現在のページ番号
+  private pageSize: number = 8  // 1ページに表示する料理の数
+  private dialogVisible: boolean = false;  // ダイアログの表示状態を制御
+  private selectedDish: any = null;  // 現在選択されている料理
+  private selectedQuantity: number = 1;  // 現在選択されている料理の数量
+  private tableData: [] = []  // 料理データを格納する配列
+  private categoryId = ''  // 現在選択されている料理のカテゴリID
+  private dishStatus: number | null = 0;  // 現在の料理の状態
 
-  // 在页面加载时默认选择菜类
+  private dishState = ''  // 料理の状態（未使用）
+  private dishCategoryList = []  // 料理のカテゴリリスト（未使用）
+  private checkList: string[] = []  // チェックされた料理IDリスト（未使用）
+  private isSearch: boolean = false  // 検索状態かどうか（未使用）
+  private saleStatus: any = [
+    { value: 0, label: '料理' },
+    { value: 1, label: 'その他' },
+  ];  // 販売状態（未使用）
+  private counts: number = 0  // 料理の総数
+
   computed = {
-    ...mapGetters('order', ['getOrderList']),
+    ...mapGetters('order', ['getOrderList']),  // Vuexから注文リストを取得
   }
+
   get orderList() {
-    return this.$store.getters['order/getOrderList'] || [];
+    return this.$store.getters['order/getOrderList'] || [];  // 注文リストを取得（デフォルトは空配列）
   }
+
   addOrderItem(orderItem) {
-    this.$store.dispatch('order/addOrderItem', orderItem);
+    this.$store.dispatch('order/addOrderItem', orderItem);  // Vuexのアクションを使って注文アイテムを追加
   }
 
   created() {
-    this.init();
+    this.init();  // ページロード時にデータを初期化
   }
 
+  // 初期化関数、検索値を受け取って再初期化
   initProp(val) {
-    this.input = val
-    this.initFun()
+    this.input = val  // 検索値を設定
+    this.initFun()  // 再初期化
   }
 
+  // 初期化関数、ページ番号をリセットしてデータを再読み込み
   initFun() {
-    this.page = 1
-    this.init()
+    this.page = 1  // ページ番号を1にリセット
+    this.init()  // データを再読み込み
   }
 
+  // 料理データを読み込み、条件に基づいてフィルタリング
   private async init(isSearch?) {
-    this.isSearch = isSearch
+    this.isSearch = isSearch  // 検索状態を設定
     await getDishPage({
       page: this.page,
       pageSize: this.pageSize,
-      name: this.input || undefined,
-      categoryId: this.categoryId || undefined,
-      status: this.dishStatus
+      name: this.input || undefined,  // 検索値があればその値でフィルタリング
+      categoryId: this.categoryId || undefined,  // カテゴリIDでフィルタリング
+      status: this.dishStatus  // 料理の状態でフィルタリング
     })
       .then(res => {
         if (res.data.code === 1) {
-          this.tableData = res.data && res.data.data && res.data.data.records
-          this.counts = Number(res.data.data.total)
+          this.tableData = res.data && res.data.data && res.data.data.records  // 料理データを設定
+          this.counts = Number(res.data.data.total)  // 料理の総数を設定
         }
       })
       .catch(err => {
-        this.$message.error('请求出错了：' + err.message)
-      })  
+        this.$message.error('エラーが発生しました：' + err.message)  // エラーハンドリング
+      })
+  }
+
+  // カテゴリ選択ボタンがクリックされた時の処理
+  private selectCategory(category: number) {
+    this.dishStatus = category;  // 現在の料理カテゴリを設定
+    this.init();  // データを再読み込み
+  }
+
+  // 料理を選択してダイアログを開く
+  private openDialog(item: any) {
+    this.selectedDish = item;  // 現在選択されている料理を設定
+    this.selectedQuantity = 1;  // デフォルト数量は1
+    this.dialogVisible = true;  // ダイアログを表示
+  }
+
+  // 料理を注文リストに追加する処理
+  private confirmAddToCart() {
+    const orderList = this.orderList;  // 現在の注文リストを取得
+
+    const existingItem = orderList.find(item => item.dish.id === this.selectedDish.id);  // 同じ料理が既に注文リストにあるか確認
+
+    if (existingItem) {
+      // 既に注文リストにある場合、数量を増やす
+      const updatedItem = { ...existingItem, quantity: existingItem.quantity + this.selectedQuantity };
+      this.addOrderItem(updatedItem);  // 更新された注文アイテムをリストに追加
+      this.$message.success(`${this.selectedDish.name} が注文リストに追加されました。数量：${updatedItem.quantity}`);  // 成功メッセージ
+    } else {
+      // 注文リストにない場合、新しく追加
+      const orderItem = {
+        dish: this.selectedDish,
+        quantity: this.selectedQuantity,
+      };
+      this.addOrderItem(orderItem);  // 新しい注文アイテムをリストに追加
+      this.$message.success(`${this.selectedDish.name} が注文リストに追加されました。数量：${this.selectedQuantity}`);  // 成功メッセージ
     }
 
-  // 选择分类按钮点击事件
-  private selectCategory(category: number) {
-    this.dishStatus = category;
-    this.init();
+    this.dialogVisible = false;  // ダイアログを閉じる
   }
 
-  private openDialog(item: any) {
-    this.selectedDish = item;
-    this.selectedQuantity = 1;
-    this.dialogVisible = true;
-  }
-  // 添加到注文列表的逻辑在点击“确定”按钮后执行
-  private confirmAddToCart() {
-  // 获取当前的订单列表
-  const orderList = this.orderList; // 确保是一个数组
-
-  // 检查 orderList 中是否已有相同 dish.id 的项
-  const existingItem = orderList.find(item => item.dish.id === this.selectedDish.id);
-
-  if (existingItem) {
-    // 如果已存在该 dish，增加数量
-    const updatedItem = { ...existingItem, quantity: existingItem.quantity + this.selectedQuantity };
-    this.addOrderItem(updatedItem);
-    this.$message.success(`${this.selectedDish.name} 已加入注文リスト，总数量：${updatedItem.quantity}`);
-  } else {
-    // 如果不存在，添加新的 orderItem
-    const orderItem = {
-      dish: this.selectedDish,
-      quantity: this.selectedQuantity,
-    };
-    this.addOrderItem(orderItem); // 调用 Vuex action 将订单项添加到 orderList 中
-    this.$message.success(`${this.selectedDish.name} 已加入注文リスト，数量：${this.selectedQuantity}`);
-  }
-
-  this.dialogVisible = false;
-}
-
-
-  // 确认订单，跳转到确认页面
+  // 注文確認ボタンがクリックされた時の処理
   private confirmOrder() {
     if (this.orderList.length === 0) {
-      this.$message.warning('请先添加一些菜品到订单中！');
+      this.$message.warning('注文リストに料理を追加してください！');  // 注文リストが空の場合の警告
       return;
     }
-    // 跳转到订单确认页面，并传递订单数据
+    // 注文確認ページに遷移
     this.$router.push({
       path: '/order-confirmation',
-      // query: {
-      //   orderList: JSON.stringify(this.orderList),
-      // },
     });
   }
 
+  // 料理の画像URLを取得
   private getImageUrl(image: any) {
     if (image instanceof Blob) {
-      return URL.createObjectURL(image);
+      return URL.createObjectURL(image);  // Blobの場合、URLを生成して返す
     }
     if (typeof image === 'string' && image.startsWith('iVBOR')) {
-      return `data:image/png;base64,${image}`;
+      return `data:image/png;base64,${image}`;  // Base64エンコードされた画像の場合、データURLを返す
     }
-    return image;
+    return image;  // その他の場合、そのまま画像URLを返す
   }
 }
 </script>

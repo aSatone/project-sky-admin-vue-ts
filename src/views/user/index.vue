@@ -1,25 +1,25 @@
 <template>
   <div class="user-welcome">
-    <!-- 欢迎标题 -->
-    <h1 class="table-number">欢迎光临餐厅！</h1>
+    <!-- ウェルカムタイトル -->
+    <h1 class="table-number">レストランへようこそ！</h1>
 
-    <!-- 随机桌号 -->
+    <!-- ランダムなテーブル番号 -->
     <div class="table-number">
-      <h2>您的桌号是：{{ tableNumber }}</h2>
-      <!-- <el-button type="primary" @click="generateTableNumber">重新生成桌号</el-button> -->
+      <h2>あなたのテーブル番号は：{{ tableNumber }}</h2>
+      <!-- <el-button type="primary" @click="generateTableNumber">テーブル番号を再生成</el-button> -->
     </div>
 
-    <!-- 人数选择 -->
+    <!-- 人数選択 -->
     <div class="guest-selection">
-      <h2>请选择就餐人数：</h2>
-      <el-select v-model="guestCount" placeholder="请选择人数">
+      <h2>お食事人数を選択してください：</h2>
+      <el-select v-model="guestCount" placeholder="人数を選択してください">
         <el-option v-for="n in 10" :key="n" :label="n + ' 人'" :value="n"></el-option>
       </el-select>
     </div>
 
-    <!-- 确认按钮 -->
+    <!-- 確認ボタン -->
     <div class="confirm-button">
-      <el-button type="success" @click="confirmDetails">确认并继续点餐</el-button>
+      <el-button type="success" @click="confirmDetails">確認して注文を続ける</el-button>
     </div>
   </div>
 </template>
@@ -28,42 +28,40 @@
 import { Vue, Component } from 'vue-property-decorator'
 import { Message } from 'element-ui';
 
-
 @Component
 export default class UserWelcome extends Vue {
-  // 桌号
+  // テーブル番号
   private tableNumber: number = this.generateRandomTableNumber()
 
-  // 就餐人数
+  // 食事人数
   private guestCount: number | null = null
 
-  // 生成随机桌号
+  // ランダムなテーブル番号を生成
   private generateRandomTableNumber(): number {
-    return Math.floor(Math.random() * 50) + 1 // 假设桌号在 1 到 50 之间
+    return Math.floor(Math.random() * 50) + 1 // テーブル番号は 1 から 50 の間で生成
   }
 
-  // 点击按钮生成新桌号
+  // ボタンをクリックして新しいテーブル番号を生成
   private generateTableNumber() {
     this.tableNumber = this.generateRandomTableNumber()
   }
 
-  // 确认人数和桌号
+  // 人数とテーブル番号を確認
   private confirmDetails() {
     if (this.guestCount === null) {
-      Message.error('请选择就餐人数！')
+      Message.error('お食事人数を選択してください！') // 人数が選択されていない場合はエラーメッセージを表示
     } else {
-      Message.success(`桌号 ${this.tableNumber}，人数 ${this.guestCount}，欢迎用餐！`)
-      // 在此处可以继续导航到点餐页面
-      this.$router.push({ path: '/order' });
+      Message.success(`テーブル番号 ${this.tableNumber}、人数 ${this.guestCount}、お食事をお楽しみください！`) // 確認メッセージを表示
+      // ここで注文ページに進むことができます
+      this.$router.push({ path: '/order' }); // 注文ページに遷移
     }
-   
   }
 }
 </script>
 
 <style scoped lang="scss">
 .user-welcome {
-  text-align: center;
+  text-align: center; /* コンテンツを中央揃え */
   margin-top: 50px;
 
   .title {
