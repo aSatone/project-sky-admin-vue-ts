@@ -50,6 +50,11 @@ const router = new Router({
       component: () => import("@/views/orderConfirmation/index.vue"),
       meta: { title: "注文確認", hidden: true, notNeedAuth: false }
     },
+    {
+      path: "/wellcome",
+      component: () => import("@/views/wellcome/index.vue"),
+      meta: { title: "いらっしゃいませ！", hidden: true, notNeedAuth: false }
+    },
     
     
     {
