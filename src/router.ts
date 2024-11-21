@@ -55,6 +55,11 @@ const router = new Router({
       component: () => import("@/views/wellcome/index.vue"),
       meta: { title: "いらっしゃいませ！", hidden: true, notNeedAuth: false }
     },
+    {
+      path: "/kitchen",
+      component: () => import("@/views/kitchen/index.vue"),
+      meta: { title: "kitchen", hidden: true, notNeedAuth: false }
+    },
     
     
     {

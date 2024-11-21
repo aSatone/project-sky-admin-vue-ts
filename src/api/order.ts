@@ -73,3 +73,9 @@ export const putOrderList = (params: any) =>
     'method': 'put',
     'data': params
   })
+  //获取当前订单
+export const getOrders = (params: any) =>
+  request({
+    'url': '/order/orderList1',
+    'method': 'get',
+  })
