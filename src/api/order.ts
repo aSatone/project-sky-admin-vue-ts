@@ -66,3 +66,10 @@ export const getOrderListBy = (params: any) => {
     method: 'get' /*  */
   })
 }
+//订单接口
+export const putOrderList = (params: any) =>
+  request({
+    'url': '/order/orderList',
+    'method': 'put',
+    'data': params
+  })

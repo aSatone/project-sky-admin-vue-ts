@@ -9,14 +9,14 @@
         <template slot-scope="scope">
           <!-- 料理の画像を表示、クリックしても何も起こらない -->
           <el-image style="width: 40px; height: 40px; border: none; cursor: pointer"
-                    :src="getImageUrl(scope.row.dish.image)">
+            :src="getImageUrl(scope.row.dish.image)">
             <div slot="error" class="image-slot">
               <img src="./../../assets/noImg.png" style="width: auto; height: 40px; border: none">
             </div>
           </el-image>
         </template>
       </el-table-column>
-      
+
       <!-- 料理名列 -->
       <el-table-column prop="dish.name" label="料理名" width="180"></el-table-column>
 
@@ -72,79 +72,142 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
+import { putOrderList } from '@/api/order';
+import { addEmployee, queryEmployeeById, updateEmployee } from '@/api/employee'
+import axios from 'axios';
 
 @Component({
   name: 'OrderConfirmation'
 })
 export default class OrderConfirmation extends Vue {
-  // Vuexのgetterを使って注文リストを取得
+  private ruleForm = {
+    name: '',
+    username: '',
+    sex: '1',
+    phone: '',
+    idNumber: ''
+  };
+  private tableId: number = 1;
+  private orderId: number = 1;
+
+  // Vuex的getter来获取订单列表
   get orderList() {
     return this.$store.getters['order/getOrderList'] || [];
   }
 
-  // Vuexのactionを使用して注文リストを更新
+  // Vuex的action来更新和删除订单项
   updateOrderItem(orderItem) {
-    this.$store.dispatch('order/addOrderItem', orderItem);  // 注文項目の更新
+    this.$store.dispatch('order/addOrderItem', orderItem);  // 更新订单项
   }
 
   removeOrderItem(orderItem) {
-    this.$store.dispatch('order/removeOrderItem', orderItem);  // 注文項目の削除
+    this.$store.dispatch('order/removeOrderItem', orderItem);  // 删除订单项
   }
 
-  // 合計金額を計算
+  // 计算总金额
   get totalAmount() {
     return this.orderList.reduce((sum, item) => sum + item.dish.price * item.quantity, 0);
   }
 
-  // 数量の更新
+  // 更新数量
   updateQuantity(orderItem) {
-    // オブジェクトの浅いコピーを作成して元のオブジェクトを直接変更しないようにする
     const updatedOrderItem = {
       ...orderItem,
-      quantity: orderItem.quantity, // 更新された数量を使用
+      quantity: orderItem.quantity,
     };
 
-    // Vuexストア内の数量を更新
     if (updatedOrderItem.quantity <= 0) {
-      this.removeItem(updatedOrderItem);  // 数量が0以下ならその項目を削除
+      this.removeItem(updatedOrderItem);  // 如果数量为0，则移除订单项
     } else {
-      this.updateOrderItem(updatedOrderItem);  // 数量を更新
+      this.updateOrderItem(updatedOrderItem);  // 否则更新数量
     }
   }
 
-  // 注文項目の削除
+  // 删除订单项
   removeItem(orderItem) {
-    this.removeOrderItem(orderItem);  // 指定した注文項目を削除
+    this.removeOrderItem(orderItem);
   }
 
-  // 注文を確定
+  // 确认订单
   confirmOrder() {
     if (this.orderList.length === 0) {
-      this.$message.warning('注文に料理が追加されていません。先に料理を追加してください！');  // 注文リストが空の場合、警告メッセージを表示
+      this.$message.warning('注文に料理が追加されていません。先に料理を追加してください！');
       return;
     }
-    this.$message.success('注文が確定しました！');  // 注文が確定したことを知らせるメッセージ
-    this.$router.push({ path: '/order' });  // 注文ページ（例：支払いページ）へ遷移
+
+    //准备发送到后端的数据
+    //需要的数据菜名name,image, order_id, dish_id,quantity,table_id
+    const payload = {
+      orderList: this.orderList.map(item => ({
+        dishId: item.dish.id,
+        quantity: item.quantity,
+        name: item.dish.name
+      })),
+
+      tableId: this.tableId,
+      orderId: this.orderId
+      // 如果有其他表单数据需要发送，可以在这里添加
+    };
+
+    console.log(payload);
+
+    // axios.put('/api/order/orderList', payload, {
+    //   headers: {
+    //     'token': 'eyJhbGciOiJIUzI1NiJ9.eyJlbXBJZCI6MSwiZXhwIjoxNzMyMDkzODE1fQ.rMWLx7n_Cz5rr5mM1U-DAtrxP9EwWt97vYCqBgkXdZ0' // 在请求头中添加 token
+    //   }
+    // })
+    //   .then(response => {
+    //     // 请求成功的回调
+    //     console.log('响应数据:', response.data);
+    //   })
+    //   .catch(error => {
+    //     if (error.response) {
+    //       // 请求已发出，服务器响应了状态码，但不在2xx范围内
+    //       console.error('响应错误:', error.response.data);
+    //       console.error('状态码:', error.response.status);
+    //     } else if (error.request) {
+    //       // 请求已发出，但没有收到响应
+    //       console.error('没有收到响应:', error.request);
+    //     } else {
+    //       // 其他错误
+    //       console.error('请求错误:', error.message);
+    //     }
+    //   });
+
+
+    //发送订单数据到后端
+    putOrderList(payload).then(res => {
+      if (res.data.code === 1) {
+        this.$message.success('注文が確定しました！');
+        this.$router.push({ path: '/wellcome' });  // 成功后跳转页面，例如支付页面
+      } else {
+        this.$message.error(res.data.msg);
+      }
+    }).catch(error => {
+      this.$message.error('注文の確定に失敗しました。もう一度試してください。');
+      console.error('Error confirming order:', error);
+    });
+
   }
 
-  // 注文ページに戻る
+  // 返回订单页
   goBack() {
-    this.$router.push({ path: '/order' }); // 注文ページへの遷移
+    this.$router.push({ path: '/order' });
   }
 
-  // 画像URLを取得
+  // 获取图片URL
   private getImageUrl(image: any) {
     if (image instanceof Blob) {
-      return URL.createObjectURL(image);  // BlobオブジェクトをURLに変換
+      return URL.createObjectURL(image);
     }
-    // base64エンコードされた文字列の場合、適切なプレフィックスを付ける
     if (typeof image === 'string' && image.startsWith('iVBOR')) {
-      return `data:image/png;base64,${image}`;  // base64文字列にプレフィックスを追加
+      return `data:image/png;base64,${image}`;
     }
-    return image;  // URL文字列の場合はそのまま返す
+    return image;
   }
 }
 </script>
+
 
 <style scoped>
 .order-confirmation-container {

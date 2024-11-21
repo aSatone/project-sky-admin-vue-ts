@@ -17,7 +17,7 @@ export interface OrderState {
 }
 
 const orderModule: Module<OrderState, any> = {
-  namespaced: true,  // 确保设置为 true
+  namespaced: true, // 确保设置为 true
   state: {
     orderList: []
   },
