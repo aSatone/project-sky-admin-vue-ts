@@ -20,11 +20,15 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
+import { mapActions, mapGetters } from 'vuex'
 
 @Component({
   name: 'Welcome'
 })
 export default class Welcome extends Vue {
+  get payStatus() {
+    return this.$store.getters['order/getPayStatus'];
+  }
   // 设置好要展示的图片
   private images: string[] = [
     require('@/assets/image1.jpg'),
@@ -37,7 +41,12 @@ export default class Welcome extends Vue {
 
   // 点击任何地方跳转到用户页面
   private goToUserPage() {
-    this.$router.push({ path: '/user' });
+    console.log(this.payStatus)
+    if(this.payStatus===0){
+      this.$router.push({ path: '/user' });
+    }
+    else this.$router.push({ path: '/order' });
+    
   }
 }
 </script>

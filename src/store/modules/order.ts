@@ -1,4 +1,5 @@
 // src/store/modules/order.ts
+import { number } from 'echarts';
 import { Module } from 'vuex';
 
 export interface OrderItem {
@@ -14,12 +15,14 @@ export interface OrderItem {
 
 export interface OrderState {
   orderList: OrderItem[];
+  payStatus: number;
 }
 
 const orderModule: Module<OrderState, any> = {
   namespaced: true, // 确保设置为 true
   state: {
-    orderList: []
+    orderList: [],
+    payStatus:0
   },
   mutations: {
     ADD_ORDER_ITEM(state, orderItem: OrderItem) {
@@ -36,6 +39,10 @@ const orderModule: Module<OrderState, any> = {
     },
     SET_ORDER_LIST(state, orderList: OrderItem[]) {
       state.orderList = [...orderList];
+    },
+    UPDATE_PAY_STATE(state){
+      //todolist 后续添加具体的更新payState的逻辑代码
+      state.payStatus = 1;
     }
   },
   actions: {
@@ -47,10 +54,14 @@ const orderModule: Module<OrderState, any> = {
     },
     setOrderList({ commit }, orderList: OrderItem[]) {
       commit('SET_ORDER_LIST', orderList);
+    },
+    updatePayState({ commit }, payStatus) {
+      commit('UPDATE_PAY_STATE', payStatus);
     }
   },
   getters: {
-    getOrderList: (state) => state.orderList
+    getOrderList: (state) => state.orderList,
+    getPayStatus: (state) => state.payStatus
   }
 };
 

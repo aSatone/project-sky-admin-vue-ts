@@ -73,9 +73,23 @@ export const putOrderList = (params: any) =>
     'method': 'put',
     'data': params
   })
-  //获取当前订单
+//获取当前订单
 export const getOrders = (params: any) =>
   request({
     'url': '/order/orderList1',
     'method': 'get',
   })
+export const updateOrderStatus = (params: any) => {
+  return request({
+    url: `/order/delivery/${params.id}`,
+    method: 'put' /*  */
+  })
+}
+
+// export function updateOrderStatus(orderId: number, data: { status: string }) {
+//   return request({
+//       url: `/orders/${orderId}/status`,
+//       method: 'PUT',
+//       data,
+//   })
+// }

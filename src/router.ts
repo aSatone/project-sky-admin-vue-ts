@@ -55,11 +55,7 @@ const router = new Router({
       component: () => import("@/views/wellcome/index.vue"),
       meta: { title: "いらっしゃいませ！", hidden: true, notNeedAuth: false }
     },
-    {
-      path: "/kitchen",
-      component: () => import("@/views/kitchen/index.vue"),
-      meta: { title: "kitchen", hidden: true, notNeedAuth: false }
-    },
+    
     
     
     {
@@ -75,6 +71,14 @@ const router = new Router({
             title: "工作台",
             icon: "dashboard",
             affix: true
+          }
+        },
+        {
+          path: "kitchen",
+          component: () => import("@/views/kitchen/index.vue"),
+          meta: {
+            title: "厨房上菜管理",
+            icon: "icon-combo"
           }
         },
 		    // {
