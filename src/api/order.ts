@@ -76,13 +76,26 @@ export const putOrderList = (params: any) =>
 //获取当前订单
 export const getOrders = (params: any) =>
   request({
-    'url': '/order/orderList1',
+    'url': '/order/getList',
     'method': 'get',
   })
+export const deleteKitchenItem = (id: number) =>
+  request({
+    url: `/order/deleteKitchenList/${id}`, // 使用路径参数传递 id
+    method: 'delete',
+  });
+
 export const updateOrderStatus = (params: any) => {
   return request({
     url: `/order/delivery/${params.id}`,
     method: 'put' /*  */
+  })
+}
+export const getPayStatus = (params: any) => {
+  return request({
+    url: '/order/payStatus', // 后端的接口路径
+    method: 'get',
+    params, // 参数包含 tableId
   })
 }
 

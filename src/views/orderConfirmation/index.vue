@@ -87,12 +87,18 @@ export default class OrderConfirmation extends Vue {
     phone: '',
     idNumber: ''
   };
-  private tableId: number = 1;
-  private orderId: number = 1;
+  //private tableId: number = 1;
+  //private orderId: number = 1;
 
   // Vuex的getter来获取订单列表
   get orderList() {
     return this.$store.getters['order/getOrderList'] || [];
+  }
+  get tableId() {
+    return this.$store.getters['order/getTableId'];
+  }
+  get orderId() {
+    return this.$store.getters['order/getOrderId'];
   }
 
   // Vuex的action来更新和删除订单项
@@ -135,18 +141,16 @@ export default class OrderConfirmation extends Vue {
       return;
     }
 
-    //准备发送到后端的数据
-    //需要的数据菜名name,image, order_id, dish_id,quantity,table_id
     const payload = {
       orderList: this.orderList.map(item => ({
         dishId: item.dish.id,
         quantity: item.quantity,
+        price:item.dish.price,
         name: item.dish.name
+        
       })),
-
       tableId: this.tableId,
       orderId: this.orderId
-      // 如果有其他表单数据需要发送，可以在这里添加
     };
 
     console.log(payload);
@@ -179,6 +183,9 @@ export default class OrderConfirmation extends Vue {
     putOrderList(payload).then(res => {
       if (res.data.code === 1) {
         this.$message.success('注文が確定しました！');
+        // 提交成功后清空orderList
+        this.$store.dispatch('order/clearOrderList'); 
+        this.$store.dispatch('order/updatePayState',0); 
         this.$router.push({ path: '/wellcome' });  // 成功后跳转页面，例如支付页面
       } else {
         this.$message.error(res.data.msg);

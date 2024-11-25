@@ -5,7 +5,7 @@
 
     <!-- ランダムなテーブル番号 -->
     <div class="table-number">
-      <h2>あなたのテーブル番号は：{{ tableNumber }}</h2>
+      <h2>あなたのテーブル番号は：11</h2>
       <!-- <el-button type="primary" @click="generateTableNumber">テーブル番号を再生成</el-button> -->
     </div>
 
@@ -27,6 +27,7 @@
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
 import { Message } from 'element-ui';
+import { Store } from 'vuex';
 
 @Component
 export default class UserWelcome extends Vue {
@@ -39,6 +40,15 @@ export default class UserWelcome extends Vue {
   // ランダムなテーブル番号を生成
   private generateRandomTableNumber(): number {
     return Math.floor(Math.random() * 50) + 1 // テーブル番号は 1 から 50 の間で生成
+  }
+  get orderList() {
+    return this.$store.getters['order/getOrderList'] || [];
+  }
+  get tableId() {
+    return this.$store.getters['order/getTableId'];
+  }
+  get orderId() {
+    return this.$store.getters['order/getOrderId'];
   }
 
   // ボタンをクリックして新しいテーブル番号を生成
@@ -53,6 +63,13 @@ export default class UserWelcome extends Vue {
     } else {
       Message.success(`テーブル番号 ${this.tableNumber}、人数 ${this.guestCount}、お食事をお楽しみください！`) // 確認メッセージを表示
       // ここで注文ページに進むことができます
+
+      const orderId = `${Date.now()}`;
+      this.$store.dispatch('order/setOrderId', orderId);
+      this.$store.dispatch('order/setTableId', 11)
+      console.log(this.tableId)
+      console.log(this.orderId)
+      console.log(this.orderList)
       this.$router.push({ path: '/order' }); // 注文ページに遷移
     }
   }

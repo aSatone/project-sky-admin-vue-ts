@@ -20,7 +20,7 @@
                 <!-- 待機時間列 -->
                 <el-table-column label="注文からの待機時間">
                     <template slot-scope="scope">
-                        {{ formatWaitTime(scope.row.waitTime) }}
+                        {{ formatWaitTime(scope.row.orderTime) }}
                     </template>
                 </el-table-column>
                 <!-- 操作列 -->
@@ -36,7 +36,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator'
-import { getOrders } from '@/api/order'
+import { getOrders, deleteKitchenItem } from '@/api/order'
 
 @Component({
     name: 'KitchenManagement',
@@ -81,7 +81,7 @@ export default class KitchenManagement extends Vue {
         // 各グループ内で待機時間を並べ替え（昇順）
         Object.keys(groupedOrders).forEach(name => {
             groupedOrders[name].sort((a, b) => {
-                return new Date(a.waitTime).getTime() - new Date(b.waitTime).getTime() // 時間を昇順に
+                return new Date(a.orderTime).getTime() - new Date(b.orderTime).getTime() // 時間を昇順に
             })
         })
 
@@ -100,15 +100,29 @@ export default class KitchenManagement extends Vue {
     }
 
     // 待機時間のフォーマット
-    private formatWaitTime(waitTime: string): string {
-        const timeDiff = (new Date().getTime() - new Date(waitTime).getTime()) / 60000 // 分に変換
+    private formatWaitTime(orderTime: string): string {
+        const timeDiff = (new Date().getTime() - new Date(orderTime).getTime()) / 60000 // 分に変換
         return timeDiff < 60 ? `${Math.floor(timeDiff)} 分` : `${(timeDiff / 60).toFixed(1)} 時間`
     }
 
     // 料理済みとしてマーク
     private markAsServed(order: any) {
         // 注文状態を更新するAPIがあると仮定
-        this.$message.success(`料理【${order.name}】を料理済みとしてマークしました！`)
+        deleteKitchenItem(order.id)
+        .then(res => {
+                if (res.data.code === 1) {
+                    // 注文データを処理
+                    this.$message.success(`料理【${order.name}】を料理済みとしてマークしました！`)
+                } else {
+                    this.$message.error('注文の取得に失敗しました')
+                }
+            })
+            .catch(err => {
+                this.$message.error('リクエスト失敗：' + err.message)
+            })
+        
+
+        
     }
 
     // カスタム行スタイル：同じ料理の間の境界線を非表示にする
