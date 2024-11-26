@@ -120,9 +120,6 @@ export default class KitchenManagement extends Vue {
             .catch(err => {
                 this.$message.error('リクエスト失敗：' + err.message)
             })
-        
-
-        
     }
 
     // カスタム行スタイル：同じ料理の間の境界線を非表示にする

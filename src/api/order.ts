@@ -98,6 +98,11 @@ export const getPayStatus = (params: any) => {
     params, // 参数包含 tableId
   })
 }
+export const getListByOrderId = (orderId: string) =>
+  request({
+    'url': `/order/getList/`, // 使用订单号来获取具体订单数据
+    'method': 'get'
+  });
 
 // export function updateOrderStatus(orderId: number, data: { status: string }) {
 //   return request({
