@@ -46,13 +46,11 @@
           </el-card>
         </el-col>
       </el-row>
-      
-      <!-- 订单确认按钮和订单历史按钮 -->
+
+      <!-- 确认订单按钮 -->
       <div class="confirm-order-button">
         <el-button type="success" @click="confirmOrder">确认订单</el-button>
-        <el-button type="info" @click="goToOrderHistory">订单历史</el-button>
       </div>
-
       <!-- 对话框的样式 -->
       <el-dialog :visible.sync="dialogVisible" width="30%" :title="selectedDish && selectedDish.name" :modal="false">
         <div v-if="selectedDish" class="dialog-content">
@@ -73,6 +71,14 @@
           <el-button type="primary" @click="confirmAddToCart" class="dialog-confirm">确定</el-button>
         </span>
       </el-dialog>
+
+      <!-- 订单历史按钮，右上角 -->
+      <div class="order-history-button">
+        <el-button type="info" icon="el-icon-document" @click="toggleOrderHistory">订单历史</el-button>
+      </div>
+
+      <!-- 订单历史侧边栏 -->
+      <OrderHistorySidebar v-if="showOrderHistorySidebar" @close="toggleOrderHistory" :orderList="orderList" @confirmPayment="confirmPayment" />
     </div>
   </div>
 </template>
@@ -90,6 +96,7 @@ import {
 import request from '@/utils/request'
 import InputAutoComplete from '@/components/InputAutoComplete/index.vue'
 import { mapGetters } from 'vuex'
+import OrderHistorySidebar from '@/components/OrderHistorySidebar/index.vue'
 
 // API请求方法定义
 export const putOrderList = (params: any) =>
@@ -102,42 +109,43 @@ export const putOrderList = (params: any) =>
 @Component({
   name: 'DishType',
   components: {
-    HeadLable,
+    OrderHistorySidebar,
+    //HeadLable,
     InputAutoComplete,
   }
 })
 export default class extends Vue {
-  private input: any = ''  // 输入的搜索值（初始为空）
-  
-  private page: number = 1  // 当前页码
-  private pageSize: number = 8  // 每页显示菜品数量
-  private dialogVisible: boolean = false;  // 控制对话框的显示状态
-  private selectedDish: any = null;  // 当前选择的菜品
-  private selectedQuantity: number = 1;  // 当前选择的菜品数量
-  private tableData: [] = []  // 存储菜品数据的数组
-  private categoryId = ''  // 当前选择的菜品分类ID
-  private dishStatus: number | null = 0;  // 当前的菜品状态
+  private input: any = ''; // 输入的搜索值
+  private page: number = 1; // 当前页码
+  private pageSize: number = 8; // 每页显示的菜品数量
+  private dialogVisible: boolean = false; // 控制对话框的显示状态
+  private selectedDish: any = null; // 当前选择的菜品
+  private selectedQuantity: number = 1; // 当前选择的菜品数量
+  private tableData: [] = []; // 存储菜品数据的数组
+  private categoryId: string = ''; // 当前选择的菜品分类ID
+  private dishStatus: number | null = 0; // 当前的菜品状态
+  private showOrderHistorySidebar: boolean = false; // 控制订单历史侧边栏显示状态
 
   computed = {
-    ...mapGetters('order', ['getOrderList']),  // 从Vuex获取订单列表
+    ...mapGetters('order', ['getOrderList']), // 从Vuex获取订单列表
   }
 
   get orderList() {
-    return this.$store.getters['order/getOrderList'] || [];  // 获取订单列表（默认是空数组）
+    return this.$store.getters['order/getOrderList'] || []; // 获取订单列表（默认是空数组）
   }
 
   addOrderItem(orderItem) {
-    this.$store.dispatch('order/addOrderItem', orderItem);  // 使用Vuex的action添加订单项
+    this.$store.dispatch('order/addOrderItem', orderItem); // 使用Vuex的action添加订单项
   }
 
   created() {
-    this.init();  // 页面加载时初始化数据
+    this.init(); // 页面加载时初始化数据
   }
 
   // 初始化函数，重置页码并重新加载数据
   initFun() {
-    this.page = 1  // 页码重置为1
-    this.init()  // 重新加载数据
+    this.page = 1; // 页码重置为1
+    this.init(); // 重新加载数据
   }
 
   // 异步加载菜品数据
@@ -161,141 +169,129 @@ export default class extends Vue {
 
   // 选择菜品分类时的处理
   private selectCategory(category: number) {
-    this.dishStatus = category;  // 设置当前菜品分类
-    this.init();  // 重新加载数据
+    this.dishStatus = category; // 设置当前菜品分类
+    this.init(); // 重新加载数据
   }
 
   // 打开选择的菜品对话框
   private openDialog(item: any) {
-    this.selectedDish = item;  // 设置当前选择的菜品
-    this.selectedQuantity = 1;  // 默认数量为1
-    this.dialogVisible = true;  // 显示对话框
+    this.selectedDish = item; // 设置当前选择的菜品
+    this.selectedQuantity = 1; // 默认数量为1
+    this.dialogVisible = true; // 显示对话框
   }
 
   // 确认将菜品加入订单
   private confirmAddToCart() {
-    const orderList = this.orderList;  // 获取当前订单列表
-    const existingItem = orderList.find(item => item.dish.id === this.selectedDish.id);  // 查找是否已存在
+    const orderList = this.orderList; // 获取当前订单列表
+    const existingItem = orderList.find(item => item.dish.id === this.selectedDish.id); // 查找是否已存在
 
     if (existingItem) {
       // 如果订单列表中已经存在，增加数量
       const updatedItem = { ...existingItem, quantity: existingItem.quantity + this.selectedQuantity };
-      this.addOrderItem(updatedItem);  // 更新后的订单项添加到列表
-      this.$message.success(`${this.selectedDish.name} 已添加到订单列表。数量：${updatedItem.quantity}`);  // 成功消息
+      this.addOrderItem(updatedItem); // 更新后的订单项添加到列表
+      this.$message.success(`${this.selectedDish.name} 已添加到订单列表。数量：${updatedItem.quantity}`); // 成功消息
     } else {
       // 如果不存在，则新增
       const orderItem = {
         dish: this.selectedDish,
         quantity: this.selectedQuantity,
       };
-      this.addOrderItem(orderItem);  // 新订单项添加到列表
-      this.$message.success(`${this.selectedDish.name} 已添加到订单列表。数量：${this.selectedQuantity}`);  // 成功消息
+      this.addOrderItem(orderItem); // 新订单项添加到列表
+      this.$message.success(`${this.selectedDish.name} 已添加到订单列表。数量：${this.selectedQuantity}`); // 成功消息
     }
 
-    this.dialogVisible = false;  // 关闭对话框
+    this.dialogVisible = false; // 关闭对话框
   }
 
   // 确认订单时的处理逻辑
   private confirmOrder() {
     if (this.orderList.length === 0) {
-      this.$message.warning('请先将菜品添加到订单列表中！');  // 订单列表为空时提示
+      this.$message.warning('注文リストに料理を追加してください！');  // 注文リストが空の場合の警告
       return;
     }
-    
-    // 构造请求数据 payload
-    const payload = {
-      orderItems: this.orderList.map(item => ({
-        dishId: item.dish.id,
-        quantity: item.quantity
-      }))
-    };
-
-    // 发送订单数据的API请求
-    putOrderList(payload).then(res => {
-      if (res.data.code === 1) {
-        this.$message.success('订单已确认！');  // 提交成功后提示
-
-        // 清空订单列表并更新支付状态
-        this.$store.dispatch('order/clearOrderList'); 
-        this.$store.dispatch('order/updatePayState', 0);
-
-        // 跳转到欢迎页面
-        this.$router.push({ path: '/welcome' });
-      } else {
-        this.$message.error(res.data.msg);  // 提交失败时提示错误信息
-      }
-    }).catch(error => {
-      this.$message.error('订单确认失败，请稍后重试。');  // 捕获请求失败的错误
-      console.error('确认订单时发生错误:', error);
+    // 注文確認ページに遷移
+    this.$router.push({
+      path: '/order-confirmation',
     });
   }
 
-  // 跳转到订单历史页面
-  private goToOrderHistory() {
-    this.$router.push({
-      path: '/order-history',
-    });
+  // 切换订单历史侧边栏显示状态
+  private toggleOrderHistory() {
+    this.showOrderHistorySidebar = !this.showOrderHistorySidebar;
+  }
+
+  // 确认支付按钮的处理
+  private confirmPayment() {
+    if (this.orderList.length === 0) {
+      this.$message.warning('订单列表为空，无法支付！');
+      return;
+    }
+    
+    // 支付逻辑可以和确认订单类似
+    this.$message.success('支付成功！');
+    this.$store.dispatch('order/clearOrderList');
+    this.$store.dispatch('order/updatePayState', 0);
+    this.showOrderHistorySidebar = false;  // 支付成功后关闭侧边栏
   }
 
   // 获取菜品图片URL
   private getImageUrl(image: any) {
     if (image instanceof Blob) {
-      return URL.createObjectURL(image);  // Blob类型，生成URL
+      return URL.createObjectURL(image); // Blob类型，生成URL
     }
     if (typeof image === 'string' && image.startsWith('iVBOR')) {
-      return `data:image/png;base64,${image}`;  // Base64编码的图片
+      return `data:image/png;base64,${image}`; // Base64编码的图片
     }
-    return image;  // 其他情况直接返回URL
+    return image; // 其他情况直接返回URL
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.dashboard {
-  &-container {
-    margin: 30px;
-    .container {
-      background: #fff;
-      position: relative;
-      z-index: 1;
-      padding: 30px 28px;
-      border-radius: 4px;
+.dashboard-container {
+  position: relative;
+  
+  .order-history-button {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+  }
 
-      .category-buttons {
-        margin-bottom: 20px;
-        display: flex;
-        justify-content: flex-start;
+  .confirm-order-button {
+    text-align: right;
+    margin-top: 20px;
 
-        .category-button {
-          width: 15%;
-          margin-right: 10px;
-        }
+    .el-button {
+      width: 20%;
+      height: 40px;
+    }
+  }
+
+  .category-buttons {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: flex-start;
+
+    .category-button {
+      width: 15%;
+      margin-right: 10px;
+    }
+  }
+
+  .dish-card {
+    margin-bottom: 20px;
+
+    .dish-info {
+      margin: 10px 0;
+
+      h4 {
+        font-size: 16px;
+        font-weight: bold;
       }
 
-      .dish-card {
-        margin-bottom: 20px;
-        .dish-info {
-          margin: 10px 0;
-          h4 {
-            font-size: 16px;
-            font-weight: bold;
-          }
-          .dish-price {
-            color: #e60012;
-            font-size: 14px;
-          }
-        }
-      }
-
-      .confirm-order-button {
-        text-align: right;
-        margin-top: 20px;
-
-        .el-button {
-          width: 20%;
-          height: 40px;
-          margin-left: 10px;  // 增加按钮间距
-        }
+      .dish-price {
+        color: #e60012;
+        font-size: 14px;
       }
     }
   }
