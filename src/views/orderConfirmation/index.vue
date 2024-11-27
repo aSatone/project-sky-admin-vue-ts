@@ -87,16 +87,16 @@ export default class OrderConfirmation extends Vue {
     phone: '',
     idNumber: ''
   };
-  //private tableId: number = 1;
+  private tableId: number = 11;
   //private orderId: number = 1;
 
   // Vuex的getter来获取订单列表
   get orderList() {
     return this.$store.getters['order/getOrderList'] || [];
   }
-  get tableId() {
-    return this.$store.getters['order/getTableId'];
-  }
+  // get tableId() {
+  //   return this.$store.getters['order/getTableId'];
+  // }
   get orderId() {
     return this.$store.getters['order/getOrderId'];
   }
@@ -188,7 +188,7 @@ export default class OrderConfirmation extends Vue {
         this.$store.dispatch('order/updatePayState',0); 
         this.$router.push({ path: '/wellcome' });  // 成功后跳转页面，例如支付页面
       } else {
-        this.$message.error(res.data.msg);
+        this.$message.error('订单号为空');
       }
     }).catch(error => {
       this.$message.error('注文の確定に失敗しました。もう一度試してください。');

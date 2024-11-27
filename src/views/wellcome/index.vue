@@ -20,7 +20,7 @@
 
 <script lang="ts">
 import { Component, Vue } from 'vue-property-decorator';
-import { getPayStatus } from '@/api/order';
+import { getOrder } from '@/api/order';
 
 @Component({
   name: 'Welcome'
@@ -28,6 +28,8 @@ import { getPayStatus } from '@/api/order';
 export default class Welcome extends Vue {
   // 修改 payStatus 为 number 类型
   private payStatus: number | null = null;
+  private tableId : number = 11;
+  private orderId : number;
 
   // 设置好要展示的图片
   private images: string[] = [
@@ -42,24 +44,24 @@ export default class Welcome extends Vue {
   // 在组件创建时获取支付状态
   created() {
     this.fetchPayStatus();
+    console.log(this.payStatus)
+    console.log(this.tableId);
   }
 
   // 获取支付状态的函数
   private async fetchPayStatus() {
     try {
-      const tableId = 11; // 假设 tableId 是桌号
-
-      // 如果没有桌号，提示用户
-      if (!tableId) {
+      if (!this.tableId) {
         this.$message.error("桌号未设置，请检查！");
         return;
       }
-
-      const res = await getPayStatus({ tableId });
-
+      const res = await getOrder(this.tableId);
       if (res.data.code === 1) {
         // 获取支付状态成功
-        this.payStatus = res.data.data;  // 这里假设 data 是一个数字类型
+        this.payStatus = res.data.data.payStatus;
+        this.orderId = res.data.data.orderId;
+        console.log(this.payStatus)
+        console.log(this.orderId)  // 这里假设 data 是一个数字类型
       } else {
         this.payStatus= 1;
       }
@@ -70,10 +72,12 @@ export default class Welcome extends Vue {
 
   // 点击任何地方跳转到用户页面
   private goToUserPage() {
-    console.log(this.payStatus);
+    
     if (this.payStatus === 1) {  // 假设 1 为已支付状态
       this.$router.push({ path: '/user' });
     } else {
+      //todolist
+      this.$store.dispatch('order/setOrderId', this.orderId);
       this.$router.push({ path: '/order' });
     }
   }

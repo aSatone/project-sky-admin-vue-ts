@@ -9,12 +9,11 @@
         <div class="order-details">
           <p>菜品: {{ item.name }}</p>
           <p>数量: {{ item.quantity }}</p>
-          <!-- <p>桌号: {{ item.tableId }}</p> -->
-          <!-- <p>订单时间: {{ formatDate(item.orderTime) }}</p> -->
+          <p>价格: ¥{{ (item.quantity * item.price).toFixed(2) }}</p> <!-- 这里修正 -->
         </div>
       </div>
       <div class="total">
-        总订单数: {{ orders.length }}
+        总价格: ¥{{ totalPrice.toFixed(2) }}
       </div>
     </div>
     <div v-else class="empty-message">
@@ -31,9 +30,14 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 
 @Component
 export default class OrderHistorySidebar extends Vue {
-  @Prop({ required: true }) orders!: any[]; // 从父组件接收 `orders` 作为订单列表数据
+  @Prop({ required: true }) orders!: { name: string; quantity: number; price: number }[]; // 订单数据结构定义
 
-  // 格式化订单时间
+  // 计算订单总价格
+  get totalPrice(): number {
+    return this.orders.reduce((total, item) => total + item.quantity * item.price, 0);
+  }
+
+  // 格式化订单时间 (可以根据需要进行修改，如果有订单时间字段)
   formatDate(dateString: string) {
     const date = new Date(dateString);
     const year = date.getFullYear();

@@ -67,9 +67,6 @@ export default class UserWelcome extends Vue {
       const orderId = `${Date.now()}`;
       this.$store.dispatch('order/setOrderId', orderId);
       this.$store.dispatch('order/setTableId', 11)
-      console.log(this.tableId)
-      console.log(this.orderId)
-      console.log(this.orderList)
       this.$router.push({ path: '/order' }); // 注文ページに遷移
     }
   }

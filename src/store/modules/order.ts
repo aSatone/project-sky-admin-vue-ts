@@ -30,8 +30,8 @@ const orderModule: Module<OrderState, any> = {
   state: {
     orderList: [], // 初始的订单菜品列表为空
     payStatus: 1, // 初始支付状态为未支付
-    tableId: 1, // 初始桌号为空
-    orderId: 1 // 初始订单ID为空
+    tableId: null, // 初始桌号为空
+    orderId: null // 初始订单ID为空
   },
 
   // 定义 mutations，用于改变 state 的状态

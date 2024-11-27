@@ -91,16 +91,21 @@ export const updateOrderStatus = (params: any) => {
     method: 'put' /*  */
   })
 }
-export const getPayStatus = (params: any) => {
+export const getOrder = (tableId: any) => {
   return request({
-    url: '/order/payStatus', // 后端的接口路径
+    url: `/order/order/${tableId}`, // 后端的接口路径
     method: 'get',
-    params, // 参数包含 tableId
   })
 }
-export const getListByOrderId = (orderId: string) =>
+export const updatePayStatus = (orderId: any) => {
+  return request({
+    url: `/order/payStatus/${orderId}`,
+    method: 'post' /*  */
+  })
+}
+export const getListByOrderId = (orderId: any) =>
   request({
-    'url': `/order/getList/`, // 使用订单号来获取具体订单数据
+    'url': `/order/getList/${orderId}`, // 使用订单号来获取具体订单数据
     'method': 'get'
   });
 

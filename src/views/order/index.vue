@@ -5,21 +5,15 @@
       <!-- カテゴリ選択ボタン -->
       <div class="category-buttons">
         <!-- 日本料理ボタン -->
-        <el-button :type="dishStatus === 0 ? 'primary' : 'default'"
-                   @click="selectCategory(0)"
-                   class="category-button">
-                   日本料理
+        <el-button :type="dishStatus === 0 ? 'primary' : 'default'" @click="selectCategory(0)" class="category-button">
+          日本料理
         </el-button>
         <!-- 中華料理ボタン -->
-        <el-button :type="dishStatus === 1 ? 'primary' : 'default'"
-                   @click="selectCategory(1)"
-                   class="category-button">
-                   中華料理
+        <el-button :type="dishStatus === 1 ? 'primary' : 'default'" @click="selectCategory(1)" class="category-button">
+          中華料理
         </el-button>
         <!-- 西洋料理ボタン -->
-        <el-button :type="dishStatus === 2 ? 'primary' : 'default'"
-                   @click="selectCategory(2)"
-                   class="category-button">
+        <el-button :type="dishStatus === 2 ? 'primary' : 'default'" @click="selectCategory(2)" class="category-button">
           西洋料理
         </el-button>
       </div>
@@ -29,9 +23,8 @@
         <el-col :span="6" v-for="(item, index) in tableData" :key="index">
           <el-card :body-style="{ padding: '10px' }" class="dish-card">
             <!-- 料理画像を表示、クリックするとダイアログを開く -->
-            <el-image :src="getImageUrl(item.image)"
-                      style="width: 100%; height: 180px; cursor: pointer"
-                      @click="openDialog(item)">
+            <el-image :src="getImageUrl(item.image)" style="width: 100%; height: 180px; cursor: pointer"
+              @click="openDialog(item)">
               <div slot="error" class="image-slot">
                 <img src="./../../assets/noImg.png" style="width: auto; height: 180px; border: none">
               </div>
@@ -47,14 +40,9 @@
         </el-col>
       </el-row>
       <Empty v-else :is-search="isSearch" />
-      <el-pagination v-if="counts > 10"
-                     class="pageList"
-                     :page-sizes="[8, 16, 24, 32]"
-                     :page-size="pageSize"
-                     layout="total, sizes, prev, pager, next, jumper"
-                     :total="counts"
-                     @size-change="handleSizeChange"
-                     @current-change="handleCurrentChange" />
+      <el-pagination v-if="counts > 10" class="pageList" :page-sizes="[8, 16, 24, 32]" :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper" :total="counts" @size-change="handleSizeChange"
+        @current-change="handleCurrentChange" />
       <!-- 注文確認ボタン -->
       <div class="confirm-order-button">
         <el-button type="success" @click="confirmOrder">注文確認</el-button>
@@ -85,7 +73,8 @@
         <el-button type="info" icon="el-icon-document" @click="toggleOrderHistory">订单历史</el-button>
       </div>
       <!-- 订单历史侧边栏 -->
-      <OrderHistorySidebar v-if="showOrderHistorySidebar" @close="toggleOrderHistory" :orders="orders" @confirmPayment="confirmPayment" />
+      <OrderHistorySidebar v-if="showOrderHistorySidebar" @close="toggleOrderHistory" :orders="orders"
+        @confirmPayment="confirmPayment" />
     </div>
   </div>
 </template>
@@ -107,7 +96,7 @@ import { config } from '@vue/test-utils'
 import { mapActions, mapGetters } from 'vuex'
 import { mapGetters } from 'vuex'
 import OrderHistorySidebar from '@/components/OrderHistorySidebar/index.vue'
-import { getListByOrderId } from '@/api/order'; // 引入 API 请求方法
+import { getListByOrderId ,updatePayStatus} from '@/api/order'; // 引入 API 请求方法
 // API请求方法定义
 export const putOrderList = (params: any) =>
   request({
@@ -126,7 +115,7 @@ export const putOrderList = (params: any) =>
 })
 export default class extends Vue {
   private input: any = ''  // 入力された検索値（初期値は空）
-  
+
   private page: number = 1  // 現在のページ番号
   private pageSize: number = 8  // 1ページに表示する料理の数
   private dialogVisible: boolean = false;  // ダイアログの表示状態を制御
@@ -154,6 +143,9 @@ export default class extends Vue {
   get orderList() {
     return this.$store.getters['order/getOrderList'] || [];  // 注文リストを取得（デフォルトは空配列）
   }
+  get orderId() {
+    return this.$store.getters['order/getOrderId'];
+  }
 
   addOrderItem(orderItem) {
     this.$store.dispatch('order/addOrderItem', orderItem);  // Vuexのアクションを使って注文アイテムを追加
@@ -161,20 +153,53 @@ export default class extends Vue {
 
   created() {
     this.init();
-    this.fetchOrderList();  // ページロード時にデータを初期化
+    this.fetchOrderList(); 
+    console.log(this.orders) // ページロード時にデータを初期化
   }
-  private async fetchOrderList() {
-    try {
-      const response = await getListByOrderId();
-      if (response.data.code === 1) {
-        this.orders = response.data.data; // 设置订单列表数据
+  // private async fetchOrderList() {
+  //   try {
+  //     const response = await getListByOrderId();
+  //     if (response.data.code === 1) {
+  //       this.orders = response.data.data; // 设置订单列表数据
+  //     } else {
+  //       this.$message.error('无法获取订单列表数据: ' + response.data.msg);
+  //     }
+  //   } catch (error) {
+  //     this.$message.error('获取订单列表失败，请稍后重试。');
+  //     console.error('获取订单列表时发生错误:', error);
+  //   }
+  // }
+  fetchOrderList() {
+    getListByOrderId(this.orderId).then(res => {
+      if (res.data.code === 1) {
+        this.orders = res.data.data;
+        const mergedOrders = [];
+
+      this.orders.forEach(order => {
+        // 查找已合并的菜品中是否有相同菜名的菜品
+        const existingOrder = mergedOrders.find(o => o.name === order.name);
+
+        if (existingOrder) {
+          // 如果找到了相同菜品，增加数量
+          existingOrder.quantity += order.quantity;
+        } else {
+          // 如果没有找到相同菜品，直接添加
+          mergedOrders.push({ ...order });
+        }
+      });
+
+      // 将合并后的数据赋值回 this.orders
+      this.orders = mergedOrders;
       } else {
-        this.$message.error('无法获取订单列表数据: ' + response.data.msg);
+        this.$message.error('无法获取订单列表数据: ' + res.data.msg);
       }
-    } catch (error) {
+    }).catch(error => {
       this.$message.error('获取订单列表失败，请稍后重试。');
       console.error('获取订单列表时发生错误:', error);
     }
+    )
+    
+    console.log(this.orderId)
   }
 
   // 初期化関数、検索値を受け取って再初期化
@@ -269,22 +294,35 @@ export default class extends Vue {
   }
 
   // 切换订单历史侧边栏显示状态
-    private toggleOrderHistory() {
+  private toggleOrderHistory() {
     this.showOrderHistorySidebar = !this.showOrderHistorySidebar;
   }
 
   // 确认支付按钮的处理
   private confirmPayment() {
-    if (this.orderList.length === 0) {
+    if (this.orders.length === 0) {
       this.$message.warning('订单列表为空，无法支付！');
       return;
     }
-    
+
     // 支付逻辑可以和确认订单类似
-    this.$message.success('支付成功！');
-    this.$store.dispatch('order/clearOrderList');
-    this.$store.dispatch('order/updatePayState', 0);
-    this.showOrderHistorySidebar = false;  // 支付成功后关闭侧边栏
+    updatePayStatus(this.orderId).then(res =>{
+      if(res.data.code === 1){
+        this.$message.success('支付成功！');
+        this.$store.dispatch('order/clearOrderList'); 
+        this.showOrderHistorySidebar = false; // 支付成功后关闭侧边栏
+        this.$router.push({ path: '/wellcome' });  
+      }else{
+        this.$message.error(res.data.msg);
+      }
+    }).catch(error => {
+      this.$message.error('支付失敗しました。もう一度試してください。');
+      console.error();
+    });
+    
+    
+    // this.$store.dispatch('order/updatePayState', 0);
+    
   }
 
   // 料理の画像URLを取得
