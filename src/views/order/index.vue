@@ -5,15 +5,23 @@
       <!-- カテゴリ選択ボタン -->
       <div class="category-buttons">
         <!-- 日本料理ボタン -->
-        <el-button :type="dishStatus === 0 ? 'primary' : 'default'" @click="selectCategory(0)" class="category-button">
+        <el-button :type="categoryId === 0 ? 'primary' : 'default'" @click="selectCategory(0)" class="category-button">
           日本料理
         </el-button>
         <!-- 中華料理ボタン -->
-        <el-button :type="dishStatus === 1 ? 'primary' : 'default'" @click="selectCategory(1)" class="category-button">
+        <el-button :type="categoryId === 1 ? 'primary' : 'default'" @click="selectCategory(1)" class="category-button">
           中華料理
         </el-button>
         <!-- 西洋料理ボタン -->
-        <el-button :type="dishStatus === 2 ? 'primary' : 'default'" @click="selectCategory(2)" class="category-button">
+        <el-button :type="categoryId === 2 ? 'primary' : 'default'" @click="selectCategory(2)" class="category-button">
+          西洋料理
+        </el-button>
+        <!-- 西洋料理ボタン -->
+        <el-button :type="categoryId === 3 ? 'primary' : 'default'" @click="selectCategory(3)" class="category-button">
+          西洋料理
+        </el-button>
+        <!-- 西洋料理ボタン -->
+        <el-button :type="categoryId === 4 ? 'primary' : 'default'" @click="selectCategory(4)" class="category-button">
           西洋料理
         </el-button>
       </div>
@@ -122,7 +130,7 @@ export default class extends Vue {
   private selectedDish: any = null;  // 現在選択されている料理
   private selectedQuantity: number = 1;  // 現在選択されている料理の数量
   private tableData: [] = []  // 料理データを格納する配列
-  private categoryId = ''  // 現在選択されている料理のカテゴリID
+  private categoryId: number | null = 19;  // 現在選択されている料理のカテゴリID
   private dishStatus: number | null = 0;  // 現在の料理の状態
   private showOrderHistorySidebar: boolean = false; // 控制订单历史侧边栏显示状态
   private dishState = ''  // 料理の状態（未使用）
@@ -231,7 +239,7 @@ export default class extends Vue {
       pageSize: this.pageSize,
       name: this.input || undefined,  // 検索値があればその値でフィルタリング
       categoryId: this.categoryId || undefined,  // カテゴリIDでフィルタリング
-      status: this.dishStatus  // 料理の状態でフィルタリング
+      //status: this.dishStatus|| undefined  // 料理の状態でフィルタリング
     })
       .then(res => {
         if (res.data.code === 1) {
@@ -245,8 +253,8 @@ export default class extends Vue {
   }
 
   // カテゴリ選択ボタンがクリックされた時の処理
-  private selectCategory(category: number) {
-    this.dishStatus = category;  // 現在の料理カテゴリを設定
+  private selectCategory(category: any) {
+    this.categoryId = category;  // 現在の料理カテゴリを設定
     this.init();  // データを再読み込み
   }
 
