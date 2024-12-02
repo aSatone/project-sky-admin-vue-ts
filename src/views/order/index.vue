@@ -5,24 +5,23 @@
       <!-- カテゴリ選択ボタン -->
       <div class="category-buttons">
         <!-- 日本料理ボタン -->
-        <el-button :type="categoryId === 0 ? 'primary' : 'default'" @click="selectCategory(0)" class="category-button">
+        <el-button :type="categoryId === 19 ? 'primary' : 'default'" @click="selectCategory(19)" class="category-button">
           日本料理
         </el-button>
         <!-- 中華料理ボタン -->
-        <el-button :type="categoryId === 1 ? 'primary' : 'default'" @click="selectCategory(1)" class="category-button">
+        <el-button :type="categoryId === 20 ? 'primary' : 'default'" @click="selectCategory(20)" class="category-button">
           中華料理
         </el-button>
+        <el-button :type="categoryId === 21 ? 'primary' : 'default'" @click="selectCategory(21)" class="category-button">
+          揚げ物
+        </el-button> 
         <!-- 西洋料理ボタン -->
-        <el-button :type="categoryId === 2 ? 'primary' : 'default'" @click="selectCategory(2)" class="category-button">
-          西洋料理
+        <el-button :type="categoryId === 11 ? 'primary' : 'default'" @click="selectCategory(11)" class="category-button">
+          ドリンク
         </el-button>
         <!-- 西洋料理ボタン -->
-        <el-button :type="categoryId === 3 ? 'primary' : 'default'" @click="selectCategory(3)" class="category-button">
-          西洋料理
-        </el-button>
-        <!-- 西洋料理ボタン -->
-        <el-button :type="categoryId === 4 ? 'primary' : 'default'" @click="selectCategory(4)" class="category-button">
-          西洋料理
+        <el-button :type="categoryId === 12 ? 'primary' : 'default'" @click="selectCategory(12)" class="category-button">
+          主食
         </el-button>
       </div>
 
@@ -78,7 +77,7 @@
       </el-dialog>
       <!-- 订单历史按钮，右上角 -->
       <div class="order-history-button">
-        <el-button type="info" icon="el-icon-document" @click="toggleOrderHistory">订单历史</el-button>
+        <el-button type="info" icon="el-icon-document" @click="toggleOrderHistory">注文履歴</el-button>
       </div>
       <!-- 订单历史侧边栏 -->
       <OrderHistorySidebar v-if="showOrderHistorySidebar" @close="toggleOrderHistory" :orders="orders"
@@ -400,9 +399,13 @@ export default class extends Vue {
     .confirm-order-button {
       text-align: right;
       margin-top: 20px;
+      position: fixed;
+  bottom: 30px;
+  right: 30px;
+  z-index: 10;
 
       .el-button {
-        width: 20%;
+        width: auto;
         height: 40px;
       }
     }

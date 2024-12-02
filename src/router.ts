@@ -77,7 +77,7 @@ const router = new Router({
           path: "kitchen",
           component: () => import("@/views/kitchen/index.vue"),
           meta: {
-            title: "厨房上菜管理",
+            title: "キッチンオペレーション管理",
             icon: "icon-combo"
           }
         },

@@ -1,26 +1,26 @@
 <template>
   <div class="order-history-sidebar">
     <div class="sidebar-header">
-      <h3>订单历史</h3>
+      <h3>注文履歴</h3>
       <el-button icon="el-icon-close" @click="$emit('close')" class="close-button"></el-button>
     </div>
     <div class="order-list" v-if="orders.length > 0">
       <div v-for="(item, index) in orders" :key="index" class="order-item">
         <div class="order-details">
-          <p>菜品: {{ item.name }}</p>
+          <p>料理: {{ item.name }}</p>
           <p>数量: {{ item.quantity }}</p>
-          <p>价格: ¥{{ (item.quantity * item.price).toFixed(2) }}</p> <!-- 这里修正 -->
+          <p>価格: ¥{{ (item.quantity * item.price).toFixed(2) }}</p> <!-- 修正箇所 -->
         </div>
       </div>
       <div class="total">
-        总价格: ¥{{ totalPrice.toFixed(2) }}
+        合計金額: ¥{{ totalPrice.toFixed(2) }}
       </div>
     </div>
     <div v-else class="empty-message">
-      <p>订单列表为空。</p>
+      <p>注文リストが空です。</p>
     </div>
     <div class="actions">
-      <el-button type="primary" @click="$emit('confirmPayment')" :disabled="orders.length === 0">支付</el-button>
+      <el-button type="primary" @click="$emit('confirmPayment')" :disabled="orders.length === 0">支払い</el-button>
     </div>
   </div>
 </template>
@@ -30,14 +30,14 @@ import { Vue, Component, Prop } from 'vue-property-decorator';
 
 @Component
 export default class OrderHistorySidebar extends Vue {
-  @Prop({ required: true }) orders!: { name: string; quantity: number; price: number }[]; // 订单数据结构定义
+  @Prop({ required: true }) orders!: { name: string; quantity: number; price: number }[]; // 注文データ構造の定義
 
-  // 计算订单总价格
+  // 注文の合計金額を計算
   get totalPrice(): number {
     return this.orders.reduce((total, item) => total + item.quantity * item.price, 0);
   }
 
-  // 格式化订单时间 (可以根据需要进行修改，如果有订单时间字段)
+  // 注文日時をフォーマット（必要に応じて変更可能、注文日時のフィールドがある場合）
   formatDate(dateString: string) {
     const date = new Date(dateString);
     const year = date.getFullYear();

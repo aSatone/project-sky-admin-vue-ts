@@ -24,7 +24,7 @@
                     </template>
                 </el-table-column>
                 <!-- 操作列 -->
-                <el-table-column label="操作">
+                <el-table-column label="厨房操作">
                     <template slot-scope="scope">
                         <el-button type="warning" size="small" @click="markAsServed(scope.row)">料理済み</el-button>
                     </template>
@@ -107,20 +107,21 @@ export default class KitchenManagement extends Vue {
 
     // 料理済みとしてマーク
     private markAsServed(order: any) {
-        // 注文状態を更新するAPIがあると仮定
-        deleteKitchenItem(order.id)
+    deleteKitchenItem(order.id)
         .then(res => {
-                if (res.data.code === 1) {
-                    // 注文データを処理
-                    this.$message.success(`料理【${order.name}】を料理済みとしてマークしました！`)
-                } else {
-                    this.$message.error('注文の取得に失敗しました')
-                }
-            })
-            .catch(err => {
-                this.$message.error('リクエスト失敗：' + err.message)
-            })
-    }
+            if (res.data.code === 1) {
+                this.$message.success(`料理【${order.name}】を料理済みとしてマークしました！`);
+                // 再度データを取得して更新
+                this.fetchOrders();
+            } else {
+                this.$message.error('注文の取得に失敗しました');
+            }
+        })
+        .catch(err => {
+            this.$message.error('リクエスト失敗：' + err.message);
+        });
+}
+
 
     // カスタム行スタイル：同じ料理の間の境界線を非表示にする
     private getRowClassName({ row, rowIndex }: { row: any; rowIndex: number }): string {
